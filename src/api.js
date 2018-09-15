@@ -1,7 +1,7 @@
 import OpenSocket from "socket.io-client";
 import _ from './mixins';
 
-const socket = OpenSocket("http://localhost:3000");
+const socket = OpenSocket();
 
 function emitAction(data) {
     socket.emit({

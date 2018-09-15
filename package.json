@@ -18,9 +18,9 @@
     "socket.io-client": "^2.1.1"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "node %NODE_DEBUG_OPTION% server.js",
+    "dev": "react-scripts start",
     "postinstall": "react-scripts build",
-    "prod": "node %NODE_DEBUG_OPTION% server.js",
     "test": "jest",
     "debug": "set NODE_ENV=debug&&npm test",
     "eject": "react-scripts eject"
