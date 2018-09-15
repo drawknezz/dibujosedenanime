@@ -1,0 +1,284 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: helvetica, arial, sans-serif;
+    margin: 25px;
+    background-image: url("https://cdn.glitch.com/e9b1b061-2e35-470e-9030-066922389a46%2Fbacktile.jpg?1536530946271");
+    background-size: 90px;
+}
+
+.bloque {
+    background-color: #ffc7c7;
+    padding: 15px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    color: #a50e0e;
+}
+
+main {
+    display: grid;
+    grid-template-columns: auto;
+    grid-gap: 20px;
+}
+
+h1 {
+    font-weight: bold;
+}
+
+td.header {
+    font-weight: bold;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.link {
+    color: blue;
+    cursor: pointer;
+}
+
+footer {
+    margin-top: 50px;
+    padding-top: 25px;
+    border-top: 1px solid lightgrey;
+    font-size: 12px;
+    color: #5c5c5c;
+}
+
+.personajes {
+    background-color: #e9bcda;
+    padding: 15px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+}
+
+.charsList {
+    display: grid;
+    padding: 10px;
+    grid-template-columns: auto auto auto auto;
+    grid-gap: 10px;
+}
+
+.char p {
+    margin: 0;
+}
+
+.char {
+    position: relative;
+    background-color: #ffcac6;
+    color: #ca2929;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 0 6px rgba(143, 50, 50, 0.5);
+}
+
+.char.asignado {
+    background-color: #ffe2e4;
+}
+
+.char .serieName {
+    font-size: 12px;
+}
+
+.char .charName {
+    font-size: 16px;
+}
+
+.char .assignedMember {
+    font-size: 12px;
+}
+
+char a:hover {
+    color: white;
+}
+
+.char a, .member a {
+    cursor: pointer;
+    font-weight: bold;
+    color: darkblue;
+    font-size: 12px;
+}
+
+.manyCharsEl .manyCharsSerie {
+    font-size: 10px;
+}
+
+.manyCharsEl p {
+    margin: 0;
+}
+
+.manyCharsEl {
+    background-color: #ff8e8e;;
+    color: white;
+    border-radius: 15px;
+    padding: 5px 15px;
+    display: inline-block;
+    margin: 2px 3px;
+    font-size: 11px;
+}
+
+.member img, .char img {
+    position: absolute;
+    width: 15px;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+}
+
+.members {
+    background-color: #e9bcda;
+    padding: 15px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+}
+
+.membersList {
+    display: grid;
+    padding: 10px;
+    grid-template-columns: auto auto auto auto;
+    grid-gap: 10px;
+    border: 1px solid #ffa5a5;
+    margin-top: 10px;
+    border-radius: 10px;
+    background-color: #ffdfdf;
+}
+
+.membersList.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+}
+
+.member p {
+    margin: 0;
+}
+
+.member {
+    position: relative;
+    background-color: #f29292;
+    color: #782525;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+    transition: all .2s ease-out;
+}
+
+.member:hover {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+.member .memberName {
+    font-size: 16px;
+}
+
+.member .charname {
+    font-size: 12px;
+}
+
+.controles {
+    font-size: 12px;
+}
+
+.messages {
+    position: fixed;
+    bottom: 10px;
+    z-index: 100;
+    right: 10px;
+}
+
+.message {
+    background-color: #3a1e1d;
+    padding: 10px;
+    border: 1px solid white;
+    border-radius: 5px;
+    color: white;
+    margin-top: 5px;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.5);
+    animation: messageAppearing 0.5s;
+}
+
+.message.dissapearing {
+    animation: messageDisappearing 0.5s forwards;
+}
+
+@keyframes messageAppearing {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes messageDisappearing {
+    0% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+button {
+    background-color: #ffe4e4;
+    border: 1px solid black;
+    margin: 2px 5px;
+    font-weight: bold;
+    padding: 3px 9px;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    color: #994040;
+    cursor: pointer;
+    transition: all .2s ease-out, color .5s ease-out;
+}
+
+button:hover {
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+    color: #ff8383;
+    background-color: white;
+}
+
+button[disabled] {
+    background-color: #d9aaaa;
+    color: #ffc7c7;
+}
+
+input {
+    border-radius: 5px;
+    border: 1px solid #ffb2b2;
+    box-shadow: inset 0px 1px 2px rgba(0, 0, 0, 0.5);
+    max-width: 200px;
+}
+
+input[type="password"] {
+    font-size: 18px;
+    text-align: center;
+    width: 100px;
+}
+
+@media (max-width: 760px) {
+    .membersList, .charsList {
+        grid-template-columns: auto auto;
+    }
+}
+
+@media (max-width: 600px) {
+    .membersList, .charsList {
+        grid-template-columns: auto;
+    }
+}
