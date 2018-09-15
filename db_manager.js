@@ -299,7 +299,7 @@ const validatePass = function (pass) {
 
 const test = function () {
     //update retos con date
-    /*db.find({type: "reto"}, (err, docs) => {
+    db.find({type: "reto", semana: {$exists: true}, fecha: {$exists: false}}, (err, docs) => {
         _.chain(docs).each(r => {
             let d = moment().week(_.get(r, "semana")).toDate();
             db.update({type: "reto", _id: r._id}, {$set: {fecha: d}}, (err, docs) => {
@@ -307,23 +307,22 @@ const test = function () {
                 console.log(`reto ${r.name} actualizado con fecha ${d}`);
             });
         }).value()
-    });*/
+    });
 
     db.find({type: "reto"}, (err, retos) => {
         //update sorteos con id de cada reto
-        /*db.find({type: "sorteo"}, (err, docs) => {
+        db.find({type: "sorteo", semana: {$exists: true}, reto: {$exists: false}}, (err, docs) => {
             _.chain(docs).each(s => {
                 let sem = _.get(s, "semana");
                 let r = _.find(retos, {semana: sem});
                 db.update({_id: s._id}, {$set: {reto: r._id}}, (err, docs) => {
                     console.log(`sorteo semana ${sem} asociado a reto `, r);
                 })
-
             }).value();
-        });*/
+        });
 
         //update chars con id de cada reto
-        /*db.find({type: "char"}, (err, docs) => {
+        db.find({type: "char", semana: {$exists: true}, reto: {$exists: false}}, (err, docs) => {
             _.chain(docs).each(s => {
                 let sem = _.get(s, "semana");
                 let r = _.find(retos, {semana: sem});
@@ -331,12 +330,11 @@ const test = function () {
                     console.log(`char ${s} asociado a reto `, r);
                 })
             }).value();
-        });*/
+        });
     });
 
     //update members con id del ultimo reto
-
-    /*getLastReto().then(reto => {
+    getLastReto().then(reto => {
         db.find({type: "member"}, (err, docs) => {
             _.chain(docs).each(m => {
                 db.update({_id: m._id}, {$set: {reto: reto._id}}, (err, docs) => {
@@ -344,11 +342,7 @@ const test = function () {
                 })
             }).value();
         });
-    })*/
-
-    db.remove({type: "member", reto: {$exists: false}}, {multi: true}, (err, docs) => {
-        console.log("miembros sin reto: ", docs);
-    })
+    });
 
 };
 

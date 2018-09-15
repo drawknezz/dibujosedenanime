@@ -19,7 +19,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "postinstall": "react-scripts build",
     "prod": "node %NODE_DEBUG_OPTION% server.js",
     "test": "jest",
     "debug": "set NODE_ENV=debug&&npm test",
