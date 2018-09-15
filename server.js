@@ -180,7 +180,7 @@ const createMember = function (name) {
     return db.getLastReto().then(reto => {
         console.log("creating member " + name);
         return db.createMember(name, _.get(reto, "_id")).then(() => {
-            return `miembro ${_.get(name, "name")} creado con exito c;`
+            return `miembro ${name} creado con exito c;`
         });
     });
 };
