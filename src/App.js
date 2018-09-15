@@ -59,7 +59,21 @@ class App extends Component {
                 </main>
 
                 <footer>
-                    <span>{usercount ? usercount + " personas conectadas" : ""} uwu</span>
+                    <span>{
+                        _.ruleMatch({c: usercount}, [
+                            {
+                                c: 1,
+                                returns: "eres el unico conectado uwu"
+                            },
+                            {
+                                c: _.partial(_.gt, _, 1),
+                                returns: `${usercount} personas conectadas uwu`
+                            },
+                            {
+                                returns: "uwu"
+                            }
+                        ])
+                    }</span>
                 </footer>
             </div>
         )
