@@ -5,8 +5,6 @@ const app = express();
 const http = require("http").Server(app);
 const io = require("socket.io")(http);
 
-const moment = require('moment');
-
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'build')));
 
@@ -23,10 +21,6 @@ app.get("/", function (request, response) {
     response.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
-const getCurrentWeek = function () {
-    return moment().week();
-};
-
 const validatePass = function (pass) {
     let validPass = process.env.PASS || "12345";
 
@@ -35,17 +29,6 @@ const validatePass = function (pass) {
         rej("Password no válido")
     })
 };
-
-app.get("/setReto", function (request, response) {
-    let reto = _.get(request, "query.reto");
-    let pass = _.get(request, "query.pass");
-
-    if (validatePass(pass)) {
-        db.setRetoForWeekNum(getCurrentWeek(), reto);
-        io.emit("update", {for: "everyone"});
-        response.send({saved: true});
-    }
-});
 
 const _sortear = function (membersIds, chars) {
     let shuffled = _.chain(membersIds).shuffle().map(m => ({member: m})).value();
@@ -81,8 +64,6 @@ const deleteSorteoEntryByChar = function (charId) {
 };
 
 const deleteSorteoEntryByMember = function (memberId) {
-    let weekNum = getCurrentWeek();
-
     return db.getMemberById(memberId).then(member => {
         return Promise.props({
             sorteo: db.getSorteoForReto(_.get(member, "reto"))
@@ -95,15 +76,13 @@ const deleteSorteoEntryByMember = function (memberId) {
 };
 
 const deleteUnexistingMembersFromSorteo = function () {
-    let weekNum = getCurrentWeek();
-
     return db.getLastReto().then(reto => {
         return Promise.props({
             sorteo: db.getSorteoForReto(_.get(reto, "_id")),
             members: db.getAllMembersForReto(_.get(reto, "_id"))
         }).then(props => {
-            let existingMembersIds = _.chain(props).get("members").map("_id").value();
-            let newSorteo = _.chain(props).get("sorteo.values").filter(s => _.includes(existingMembersIds, _.get(s, "member"))).value();
+            let existingMembersIds = _.chain(props).get("members").map("_id").map(_.toString).value();
+            let newSorteo = _.chain(props).get("sorteo.values").filter(s => _.includes(existingMembersIds, _.toString(_.get(s, "member")))).value();
 
             return db.setSorteoForReto(_.get(reto, "_id"), newSorteo);
         });
@@ -111,15 +90,13 @@ const deleteUnexistingMembersFromSorteo = function () {
 };
 
 const deleteUnexistingCharsFromSorteo = function () {
-    let weekNum = getCurrentWeek();
-
     return db.getLastReto().then(reto => {
         return Promise.props({
             sorteo: db.getSorteoForReto(_.get(reto, "_id")),
             chars: db.getAllCharsForReto(_.get(reto, "_id"))
         }).then(props => {
-            let existingCharsIds = _.chain(props).get("chars").map("_id").value();
-            let newSorteo = _.chain(props).get("sorteo.values").filter(s => _.includes(existingCharsIds, _.get(s, "char"))).value();
+            let existingCharsIds = _.chain(props).get("chars").map("_id").map(_.toString).value();
+            let newSorteo = _.chain(props).get("sorteo.values").filter(s => _.includes(existingCharsIds, _.toString(_.get(s, "char")))).value();
 
             return db.setSorteoForReto(_.get(reto, "_id"), newSorteo);
         });
@@ -135,8 +112,14 @@ const sortear = function (pass) {
                 chars: db.getAllCharsForReto(_.get(reto, "_id")),
                 members: db.getAllMembersForReto(_.get(reto, "_id"))
             }).then(props => {
-                let sorteo = _sortear(_.map(props.members, "_id"), props.chars);
-                return db.setSorteoForReto(_.get(reto, "_id"), sorteo);
+                if (_.isEmpty(_.get(props, "chars", []))) {
+                    return "crea algunos personajes antes de sortear...";
+                } else if (_.isEmpty(_.get(props, "members", []))) {
+                    return "crea algunos miembros antes de sortear..."
+                } else {
+                    let sorteo = _sortear(_.map(props.members, "_id"), props.chars);
+                    return db.setSorteoForReto(_.get(reto, "_id"), sorteo);
+                }
             });
         });
     });
@@ -252,7 +235,7 @@ const assignCharToMember = function (id, pass) {
 
                             return db.setSorteoForReto(_.get(reto, "_id"), newSorteo).then(() => {
                                 return `${_.get(props, "member.name")} asociado a personaje ${_.get(charAsociado, "name")}`;
-                            });;
+                            });
                         } else {
                             return "No hay personajes para asignar...";
                         }
@@ -311,8 +294,6 @@ const deleteLastReto = function(pass) {
 };
 
 const getAllData = function () {
-    let weekNum = moment().week();
-
     return db.getLastReto().then(reto => {
         return Promise.props({
             reto: reto,
@@ -321,14 +302,14 @@ const getAllData = function () {
             members: db.getAllMembersForReto(_.get(reto, "_id"))
         }).then(props => {
             let fullChars = _.chain(props.chars).map(c => {
-                let sorteoElement = _.find(_.get(props, "sorteo.values"), {char: c._id});
+                let sorteoElement = _.find(_.get(props, "sorteo.values"), {char: _.get(c, "_id")});
                 return _.extend({}, c, {
                     assignedTo: _.chain(props.members).find({_id: _.get(sorteoElement, "member")}).get("name").value()
                 });
             }).value();
 
             let fullMembers = _.chain(props.members).map(m => {
-                let sorteoElement = _.find(_.get(props, "sorteo.values"), {member: m._id});
+                let sorteoElement = _.find(_.get(props, "sorteo.values"), {member: _.get(m, "_id")});
                 return _.extend({}, m, {
                     assignedTo: _.chain(props.chars).find({_id: _.get(sorteoElement, "char")}).get("name").value()
                 });
@@ -491,6 +472,4 @@ let listener = http.listen(process.env.PORT || 3000, function () {
     console.log('Your app is listening on port ' + listener.address().port);
 
     userCount = 0;
-
-    db.test();
 });

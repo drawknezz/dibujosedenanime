@@ -8,6 +8,7 @@
     "express": "latest",
     "lodash": "^4.17.11",
     "moment": "latest",
+    "mongodb": "^3.1.6",
     "nedb": "^1.8.0",
     "react": "^16.5.0",
     "react-dom": "^16.5.0",
@@ -17,7 +18,8 @@
     "socket.io-client": "^2.1.1"
   },
   "scripts": {
-    "start": "node server.js",
+    "start": "node %NODE_DEBUG_OPTION% server.js",
+    "startlocal": "set NODE_ENV=local&&node %NODE_DEBUG_OPTION% server.js",
     "dev": "react-scripts start",
     "postinstall": "react-scripts build",
     "test": "jest",
