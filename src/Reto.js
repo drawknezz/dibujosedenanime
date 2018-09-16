@@ -24,11 +24,13 @@ class Reto extends React.Component {
             },
             {
                 s: "loaded",
-                returns: <div>
-                    <p><span>reto actual: {reto.name}
+                returns: <div className={"bloquereto"}>
+                    <h2>{_.get(reto, "name", "no asignado")}</h2>
+                    <p><span>reto actual</span></p>
+                    <span>
                         <button onClick={this.Asignar}>reasignar</button>
                         <button onClick={this.Delete}>eliminar</button>
-                    </span></p>
+                    </span>
                 </div>
             },
             {

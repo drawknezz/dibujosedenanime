@@ -1,5 +1,4 @@
 const _ = require("./mixins");
-const store = require("nedb");
 const Promise = require("bluebird");
 
 const mongodb = require("mongodb");
@@ -14,7 +13,7 @@ const getDB = (function () {
 
             console.log("DB connected...", new Date());
             res(dibujos);
-        })
+        }).catch(err => rej(err));
     });
 
     return function () {
@@ -277,7 +276,7 @@ const deleteReto = function (id) {
                     });
                 }),
             }).then(data => {
-                res(`reto ${_.get(reto, "name")} eliminado, junto con ${_.get(data, "chars")} personajes y ${_.get(data, "members")} miembros`);
+                res(`reto ${_.get(reto, "name")} eliminado, junto con ${_.get(data, "chars.deletedCount")} personajes y ${_.get(data, "members.deletedCount")} miembros`);
             });
         })
     })

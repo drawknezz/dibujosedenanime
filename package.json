@@ -9,7 +9,6 @@
     "lodash": "^4.17.11",
     "moment": "latest",
     "mongodb": "^3.1.6",
-    "nedb": "^1.8.0",
     "react": "^16.5.0",
     "react-dom": "^16.5.0",
     "react-express-middleware": "^3.1.3",
