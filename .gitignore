@@ -2,7 +2,6 @@
 
 .idea
 /.next
-db/dibujos.db
 
 # dependencies
 /node_modules
