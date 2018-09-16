@@ -1,7 +1,8 @@
 import OpenSocket from "socket.io-client";
 import _ from './mixins';
 
-const socket = OpenSocket();
+let loc = /localhost/.test(window.location.href) ? "http://localhost:3000" : null;
+const socket = OpenSocket(loc);
 
 function emitAction(data) {
     socket.emit({
