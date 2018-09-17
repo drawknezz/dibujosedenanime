@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import Char from './Char';
 import _ from './mixins';
-import { socketEmit } from './api';
+import {socketEmit} from './api';
 
 class Chars extends Component {
     constructor() {
@@ -15,7 +15,7 @@ class Chars extends Component {
     }
 
     render() {
-        let chars = this.props.chars;
+        let chars = _.get(this, "props.chars", []);
 
         return _.ruleMatch({
             s: this.state.status
@@ -35,9 +35,9 @@ class Chars extends Component {
                 returns: (
                     <div className="bloque">
                         <div className="controles">
-                            <label>nombre: <input ref="charNameTxt"></input></label>
-                            <label>serie: <input ref="charSerieTxt"></input></label>
-                            <label>clave: <input type="password" ref="claveInput"></input></label>
+                            <label>nombre: <input ref="charNameTxt"/></label>
+                            <label>serie: <input ref="charSerieTxt"/></label>
+                            <label>clave: <input type="password" ref="claveInput"/></label>
                             <button onClick={this.sendNewChar}>agregar</button>
                             <button onClick={this.resetStatus}>cancelar</button>
                         </div>
@@ -45,9 +45,9 @@ class Chars extends Component {
                         <div className="charsList">{
                             _.chain(chars)
                                 .sortBy(m => m.name.toLowerCase())
-                                .map((char, i) => {
+                                .map(char => {
                                     return (<Char key={char._id} name={char.name} serie={char.serie} id={char._id}
-                                                  dis={true} member={char.assignedTo}></Char>)
+                                                  dis={true} member={char.assignedTo}/>)
                                 }).value()
                         }</div>
                     </div>
@@ -63,7 +63,7 @@ class Chars extends Component {
                             </p>
 
                             <p>nombres:</p>
-                            <p><textarea ref="manyNamesTxt" onChange={this.updateManyCharsInfo}></textarea></p>
+                            <p><textarea ref="manyNamesTxt" onChange={this.updateManyCharsInfo}/></p>
                             <div className="manyChars">{
                                 _.chain(this).get("state.manychars").map((c, i) =>
                                     <div className="manyCharsEl" key={i}>
@@ -72,7 +72,7 @@ class Chars extends Component {
                                     </div>).value()
                             }</div>
                             <p>
-                                <label>clave: <input type="password" ref="claveInput"></input></label>
+                                <label>clave: <input type="password" ref="claveInput"/></label>
                                 <button onClick={this.sendManyChars}>agregar ({_.get(this, "state.manychars.length")})
                                 </button>
                                 <button onClick={this.resetStatus}>cancelar</button>
@@ -83,9 +83,9 @@ class Chars extends Component {
                         <div className="charsList">{
                             _.chain(chars)
                                 .sortBy(m => m.name.toLowerCase())
-                                .map((char, i) => {
+                                .map(char => {
                                     return (<Char key={char._id} name={char.name} serie={char.serie} id={char._id}
-                                                  dis={true} member={char.assignedTo}></Char>)
+                                                  dis={true} member={char.assignedTo}/>)
                                 }).value()
                         }</div>
                     </div>
@@ -101,13 +101,19 @@ class Chars extends Component {
                             <button onClick={this.createMany}>agregar varios</button>
                         </div>
 
-                        <div className="charsList">{
-                            _.chain(chars)
-                                .sortBy(m => m.name.toLowerCase())
-                                .map((char, i) => {
-                                    return (<Char key={char._id} name={char.name} serie={char.serie} id={char._id}
-                                                  member={char.assignedTo}></Char>)
-                                }).value()
+                        <div className={"charsList" + (_.isEmpty(chars) ? " empty" : "")}>{
+                            (
+                                _.isEmpty(chars) ?
+                                    <p><span>No hay personajes asociados al reto actual...</span></p> :
+                                    _.chain(chars)
+                                        .sortBy(m => m.name.toLowerCase())
+                                        .map(char => {
+                                            return (
+                                                <Char key={char._id} name={char.name} serie={char.serie} id={char._id}
+                                                      member={char.assignedTo}/>)
+                                        }).value()
+                            )
+
                         }</div>
                     </div>
                 )

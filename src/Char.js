@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import _ from './mixins';
-import { socketEmit } from './api';
+import {socketEmit} from './api';
 
 class Char extends Component {
     constructor() {
@@ -15,9 +15,7 @@ class Char extends Component {
         let name = this.props.name;
         let serie = this.props.serie;
         let member = this.props.member;
-        let closeBtn = <img src="https://cdn.glitch.com/e9b1b061-2e35-470e-9030-066922389a46%2Fdelete.svg?1536087131015"
-                            alt="eliminar"
-                            onClick={this.deleting}/>;
+        let closeBtn = <img src="/close.svg" alt="eliminar" onClick={this.deleting}/>;
 
         return _.ruleMatch({
             s: _.get(this, "state.status")
@@ -29,7 +27,7 @@ class Char extends Component {
                         <p className="charName"><span><strong>{name}</strong></span></p>
                         <p className="serieName"><span>{serie}</span></p>
                         <p className="assignedMember"><span><i><strong>asignando...</strong></i>, clave:
-              <input type="password" ref="claveInput"></input> <a onClick={this.assignRandom}>asignar</a> / <a
+              <input type="password" ref="claveInput"/> <a onClick={this.assignRandom}>asignar</a> / <a
                                 onClick={this.resetState}>cancelar</a>
             </span></p>
                     </div>
@@ -43,7 +41,7 @@ class Char extends Component {
                         <p className="charName"><span><strong>{name}</strong></span></p>
                         <p className="serieName"><span>{serie}</span></p>
                         <p className="assignedMember"><span><i><strong>desasignando...</strong></i>, clave:
-              <input type="password" ref="claveInput"></input> <a onClick={this.unassign}>desasignar</a> / <a
+              <input type="password" ref="claveInput"/> <a onClick={this.unassign}>desasignar</a> / <a
                                 onClick={this.resetState}>cancelar</a>
             </span></p>
                     </div>
@@ -57,7 +55,7 @@ class Char extends Component {
                         <p className="charName"><span><strong>{name}</strong></span></p>
                         <p className="serieName"><span>{serie}</span></p>
                         <p className="assignedMember"><span><i><strong>borrando...</strong></i>, clave:
-              <input type="password" ref="claveInput"></input> <a onClick={this.deleteChar}>borrar</a> / <a
+              <input type="password" ref="claveInput"/> <a onClick={this.deleteChar}>borrar</a> / <a
                                 onClick={this.resetState}>cancelar</a>
             </span></p>
                     </div>
@@ -87,7 +85,7 @@ class Char extends Component {
         let id = this.props.id;
         let pass = _.get(this, "refs.claveInput.value");
 
-        socketEmit("deletechar", {id: id, pass: pass} );
+        socketEmit("deletechar", {id: id, pass: pass});
 
         this.resetState();
     }
@@ -100,7 +98,7 @@ class Char extends Component {
         let id = _.get(this, "props.id");
         let clave = _.get(this, "refs.claveInput.value");
 
-        socketEmit("assignmembertochar", {id: id, pass: clave} );
+        socketEmit("assignmembertochar", {id: id, pass: clave});
 
         this.resetState();
     }
@@ -113,7 +111,7 @@ class Char extends Component {
         let id = this.props.id;
         let clave = _.get(this, "refs.claveInput.value");
 
-        socketEmit("unassignchar", { id: id, pass: clave});
+        socketEmit("unassignchar", {id: id, pass: clave});
 
         this.resetState();
     }
