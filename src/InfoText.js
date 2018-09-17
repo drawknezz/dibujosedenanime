@@ -36,9 +36,6 @@ class Char extends Component {
                             _.chain(this)
                                 .get("props.infoTxt", "")
                                 .thru(txt => txt.match(/([^*]+|\*[^*]+\*)|\*/g))
-                                .tap(txt => {
-                                    console.log("valores, ", txt);
-                                })
                                 .map((phrase, i) => {
                                     return _.ruleMatch({t: phrase}, [
                                         {
