@@ -5,6 +5,7 @@ import Sorteo from './Sorteo';
 import Reto from './Reto';
 import Chars from './Chars';
 import Members from './Members'
+import InfoText from './InfoText'
 import {onSocket, socketEmit} from "./api";
 
 class App extends Component {
@@ -55,8 +56,7 @@ class App extends Component {
 
                         <main>
                             <div className="bloque">
-                                <p><span>Cabrxs agreguen su nombre presionando el boton <strong>Agregar miembro</strong>, tiene que ser el mismo con el que votan para que no haya malentendidos, y ojala el nombre no muy largo xd.</span>
-                                </p>
+                                <InfoText infoTxt={_.get(this, "state.infoTxt.txt")}/>
                             </div>
 
                             <div className="bloque">
@@ -98,6 +98,7 @@ class App extends Component {
     updateAll(data) {
         console.log("allData response: ", data);
         this.setState({
+            infoTxt: _.get(data, "infoTxt"),
             reto: _.get(data, "reto"),
             sorteo: _.get(data, "sorteo"),
             weekNum: _.get(data, "weekNum"),
@@ -131,6 +132,8 @@ class App extends Component {
         socketEmit("allData");
 
         window.setInterval(() => {
+            if(_.isEmpty(_.get(this, "state.messages"))) return;
+
             let newMessages = _.chain(this).get("state.messages").reject(m => _.get(m, "cls") === "dissapearing").map(m => {
                 if (new Date().getTime() - m.time > 5000) {
                     return _.extend({}, m, {cls: "dissapearing"})

@@ -293,9 +293,16 @@ const deleteLastReto = function(pass) {
     });
 };
 
+const updateInfoText = function(txt, pass) {
+    return validatePass(pass).then(() => {
+        return db.setInfoTxt(txt);
+    });
+};
+
 const getAllData = function () {
     return db.getLastReto().then(reto => {
         return Promise.props({
+            infoTxt: db.getInfoTxt(),
             reto: reto,
             sorteo: db.getSorteoForReto(_.get(reto, "_id")),
             chars: db.getAllCharsForReto(_.get(reto, "_id")),
@@ -337,6 +344,16 @@ io.on("connection", function (socket) {
 
     socket.on("allData", function () {
         updateAllClients();
+    });
+
+    socket.on("editinfotext", ({txt, pass}) => {
+        updateInfoText(txt, pass).then(resp => {
+            updateAllClients();
+            socket.emit("msg", resp);
+        }).catch(err => {
+            console.log("ERROR: ", err);
+            socket.emit("err", err);
+        })
     });
 
     socket.on("deletelastreto", ({pass}) => {

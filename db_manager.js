@@ -294,6 +294,39 @@ const getLastReto = function () {
     })
 };
 
+const getInfoTxt = function() {
+    return new Promise((res, rej) => {
+        getDB().then(db => {
+            db.findOne({type: "info"}, (err, docs) => {
+                if (err) rej(err);
+                res(docs);
+            })
+        });
+    })
+};
+
+const setInfoTxt = function(txt) {
+    return new Promise((res, rej) => {
+        getDB().then(db => {
+            db.find({type: "info"}).toArray((err, docs) => {
+                if(_.isEmpty(docs)) {
+                    db.insertOne({type: "info", txt: txt}, (err, docs) => {
+                        if (err) rej(err);
+
+                        res("mensaje actualizado");
+                    })
+                } else {
+                    db.updateOne({type: "info"}, {$set: {txt: txt}}, (err, docs) => {
+                        if (err) rej(err);
+
+                        res("mensaje actualizado");
+                    })
+                }
+            });
+        })
+    })
+};
+
 const test = function () {
 
 };
@@ -312,5 +345,7 @@ module.exports = {
     createReto: createReto,
     deleteReto: deleteReto,
     getLastReto: getLastReto,
+    getInfoTxt,
+    setInfoTxt,
     test: test
 };
