@@ -128,6 +128,7 @@ const sortear = function (pass) {
 const deleteChar = function (id, pass) {
     return validatePass(pass).then(() => {
         return db.getCharById(id).then(char => {
+            console.log(`deleting char ${_.get(char, "name")} (${id})`);
             return db.deleteChar(id).then(function () {
                 return Promise.all([deleteUnexistingMembersFromSorteo(), deleteUnexistingCharsFromSorteo()])
                     .then(() => `personaje ${_.get(char, "name")} eliminado`);
@@ -170,12 +171,11 @@ const createMember = function (name) {
 
 const deleteMember = function (memberId, pass) {
     return validatePass(pass).then(() => {
-        console.log("deleting member " + memberId);
-
         deleteUnexistingMembersFromSorteo();
         deleteUnexistingCharsFromSorteo();
 
         return db.getMemberById(memberId).then(member => {
+            console.log(`deleting member ${_.get(member, "name")} (${memberId})`);
             return db.deleteMember(memberId).then(() => {
                 return `miembro ${_.get(member, "name")} eliminado`
             });
@@ -185,9 +185,8 @@ const deleteMember = function (memberId, pass) {
 
 const unassignMember = function (memberId, pass) {
     return validatePass(pass).then(() => {
-        console.log("unasigning member " + memberId);
-
         return db.getMemberById(memberId).then(member => {
+            console.log(`unasigning member ${_.get(member, "name")} (${memberId})`);
             return deleteSorteoEntryByMember(memberId).then(() => {
                 return `miembro ${_.get(member, "name")} disponible uwu`
             })
@@ -197,9 +196,8 @@ const unassignMember = function (memberId, pass) {
 
 const unassignChar = function (charId, pass) {
     return validatePass(pass).then(() => {
-        console.log("unasigning char " + charId);
-
         return db.getCharById(charId).then(char => {
+            console.log(`unasigning char ${_.get(char, "name")} (${charId})`);
             return deleteSorteoEntryByChar(charId).then(() => {
                 return `personaje ${_.get(char, "name")} disponible uwu`
             });
@@ -212,8 +210,6 @@ const unassignChar = function (charId, pass) {
  */
 const assignCharToMember = function (id, pass) {
     return validatePass(pass).then(() => {
-        console.log("assigning char to member with id " + id);
-
         return deleteUnexistingMembersFromSorteo()
             .then(() => deleteUnexistingCharsFromSorteo())
             .then(() => {
@@ -223,6 +219,8 @@ const assignCharToMember = function (id, pass) {
                         chars: db.getAllCharsForReto(_.get(reto, "_id")),
                         member: db.getMemberById(id)
                     }).then(props => {
+                        console.log(`assigning char to member ${_.get(props, "member.name")} (${id})`);
+
                         let assignedCharsIds = _.chain(props).get("sorteo.values").map("char").value();
                         let unassignedChars = _.chain(props.chars).reject(c => _.includes(assignedCharsIds, _.get(c, "_id"))).value();
 
@@ -231,12 +229,12 @@ const assignCharToMember = function (id, pass) {
                             let charAsociado = _.chain(props).get("chars").find({_id: _.get(charSorteo, "0.char")}).value();
                             let newSorteo = _.unionBy(charSorteo, _.get(props, "sorteo.values"), "char");
 
-                            console.log("appending ", charSorteo);
-
                             return db.setSorteoForReto(_.get(reto, "_id"), newSorteo).then(() => {
+                                console.log(`${_.get(props, "member.name")} asociado a personaje ${_.get(charAsociado, "name")}`);
                                 return `${_.get(props, "member.name")} asociado a personaje ${_.get(charAsociado, "name")}`;
                             });
                         } else {
+                            console.log("No hay personajes para asignar...");
                             return "No hay personajes para asignar...";
                         }
                     });
@@ -250,14 +248,13 @@ const assignCharToMember = function (id, pass) {
  */
 const assignMemberToChar = function (charId, pass) {
     return validatePass(pass).then(() => {
-        console.log("asigning member to char with id " + charId);
-
         return db.getLastReto().then(reto => {
             return Promise.props({
                 sorteo: db.getSorteoForReto(_.get(reto, "_id")),
                 members: db.getAllMembersForReto(_.get(reto, "_id")),
                 char: db.getCharById(charId)
             }).then(props => {
+                console.log(`asigning member to char ${_.get(props, "char.name")} (${charId})`);
                 let assignedMembersIds = _.chain(props).get("sorteo.values").map("member").value();
                 let unassignedMembersIds = _.chain(props.members).map("_id").difference(assignedMembersIds).value();
 
@@ -266,12 +263,12 @@ const assignMemberToChar = function (charId, pass) {
                     let miembroAsociado = _.chain(props).get("members").find({_id: _.get(charSorteo, "0.member")}).value();
                     let newSorteo = _.unionBy(charSorteo, _.get(props, "sorteo.values"), "char");
 
-                    console.log("appending ", charSorteo);
-
                     return db.setSorteoForReto(_.get(reto, "_id"), newSorteo).then(() => {
+                        console.log(`${_.get(props, "char.name")} asociado a miembro ${_.get(miembroAsociado, "name")}`);
                         return `${_.get(props, "char.name")} asociado a miembro ${_.get(miembroAsociado, "name")}`;
                     });
                 } else {
+                    console.log("No hay miembros sin personaje asignado");
                     return "No hay miembros sin personaje asignado";
                 }
             });
@@ -281,6 +278,7 @@ const assignMemberToChar = function (charId, pass) {
 
 const createReto = function (name, pass) {
     return validatePass(pass).then(() => {
+        console.log(`creating reto ${name}`);
         return db.createReto(name)
     });
 };
@@ -288,6 +286,7 @@ const createReto = function (name, pass) {
 const deleteLastReto = function(pass) {
     return validatePass(pass).then(() => {
         return db.getLastReto().then(reto => {
+            console.log(`eliminando reto ${_.get(reto, "name")}`);
             return db.deleteReto(_.get(reto, "_id"));
         })
     });

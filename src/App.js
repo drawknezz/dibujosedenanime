@@ -119,8 +119,6 @@ class App extends Component {
         });
 
         onSocket("allData", data => {
-            console.log("received all data response :0");
-
             this.setState({status: "loaded"});
 
             this.updateAll(data);
