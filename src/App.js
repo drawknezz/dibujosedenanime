@@ -6,6 +6,7 @@ import Reto from './Reto';
 import Chars from './Chars';
 import Members from './Members'
 import InfoText from './InfoText'
+import Login from './Login';
 import {onSocket, socketEmit} from "./api";
 
 class App extends Component {
@@ -16,19 +17,18 @@ class App extends Component {
             status: "loading"
         };
 
-        _.bindAll(this, "showMessage");
+        _.bindAll(this, "showMessage", "onLoginStatusChange");
     }
 
     render() {
-        let usercount = _.get(this, "state.usercount");
-
+        let usercount = _.get(this, "state.usercount", []);
         return _.ruleMatch({s: _.get(this, "state.status")}, [
             {
                 s: "loading",
                 returns: (
                     <div>
                         <div className="loadingBox">
-                            <img src="/pikachu.gif"/>
+                            <img src="/pikachu.gif" alt="loading"/>
                             <p><span>cargando...</span></p>
                             <p><span className="smallText">(este host aguanta mas carga pero es mas lento ...)</span></p>
                         </div>
@@ -38,6 +38,8 @@ class App extends Component {
             {
                 returns: (
                     <div>
+                        <Login onStatusChange={this.onLoginStatusChange} loginData={_.get(this, "state.loginData")}/>
+
                         <header>
                             <h1 data-testid="pagetitle">
                                 Dibujos eden anime <span role="img" aria-label="hearts">💕</span>
@@ -67,7 +69,7 @@ class App extends Component {
                                 <Sorteo sorteo={this.state.sorteo}/>
                             </div>
 
-                            <Members members={this.state.members}/>
+                            <Members members={this.state.members} loginData={_.get(this, "state.loginData")}/>
 
                             <Chars chars={this.state.chars}/>
                         </main>
@@ -76,12 +78,12 @@ class App extends Component {
                     <span>{
                         _.ruleMatch({c: usercount}, [
                             {
-                                c: 1,
-                                returns: "eres el unico conectado uwu"
+                                "c.length": 1,
+                                returns: `eres el unico usuario conectado ${_.get(usercount, "0.name")} uwu`
                             },
                             {
-                                c: _.partial(_.gt, _, 1),
-                                returns: `${usercount} personas conectadas uwu`
+                                "c.length": _.partial(_.gt, _, 1),
+                                returns: `${usercount.length} usuarios conectados uwu`
                             },
                             {
                                 returns: "uwu"
@@ -111,6 +113,17 @@ class App extends Component {
         this.setState({
             messages: _.union(_.get(this, "state.messages", []), [{txt: msg, time: new Date().getTime()}])
         });
+    }
+
+    onLoginStatusChange(loginData) {
+        this.setState({loginData: loginData});
+
+        if (_.get(loginData, "username")) {
+            socketEmit("createuser", {
+                name: _.get(loginData, "username"),
+                facebookId: _.get(loginData, "authResponse.userID")
+            });
+        }
     }
 
     componentDidMount() {

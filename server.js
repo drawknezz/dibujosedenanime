@@ -1,16 +1,27 @@
 const express = require('express');
 const path = require("path");
+const fs = require("fs");
 const app = express();
 
 const http = require("http").Server(app);
 const io = require("socket.io")(http);
+
+if (process.env.NODE_ENV === 'local') {
+    //para probar login de facebook en local, en prod no es necesario
+    const https = require("https");
+    let sslOptions = {
+        key: fs.readFileSync('key.pem'),
+        cert: fs.readFileSync('cert.pem'),
+        passphrase: "1234"
+    };
+    https.Server(sslOptions, app).listen(8443);
+}
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'build')));
 
 const _ = require("./mixins");
 const Promise = require("bluebird");
-
 const db = require("./db_manager");
 
 const handleError = error => console.log("unhandled promise error: ", error);
@@ -258,7 +269,7 @@ const assignMemberToChar = function (charId, pass) {
                 let assignedMembersIds = _.chain(props).get("sorteo.values").map("member").value();
                 let unassignedMembersIds = _.chain(props.members).map("_id").difference(assignedMembersIds).value();
 
-                if(!_.isEmpty(unassignedMembersIds)) {
+                if (!_.isEmpty(unassignedMembersIds)) {
                     let charSorteo = _sortear(unassignedMembersIds, [props.char]);
                     let miembroAsociado = _.chain(props).get("members").find({_id: _.get(charSorteo, "0.member")}).value();
                     let newSorteo = _.unionBy(charSorteo, _.get(props, "sorteo.values"), "char");
@@ -283,7 +294,7 @@ const createReto = function (name, pass) {
     });
 };
 
-const deleteLastReto = function(pass) {
+const deleteLastReto = function (pass) {
     return validatePass(pass).then(() => {
         return db.getLastReto().then(reto => {
             console.log(`eliminando reto ${_.get(reto, "name")}`);
@@ -292,10 +303,14 @@ const deleteLastReto = function(pass) {
     });
 };
 
-const updateInfoText = function(txt, pass) {
+const updateInfoText = function (txt, pass) {
     return validatePass(pass).then(() => {
         return db.setInfoTxt(txt);
     });
+};
+
+const createUser = function(name, fid) {
+    return db.createUser(name, fid);
 };
 
 const getAllData = function () {
@@ -329,7 +344,7 @@ const getAllData = function () {
     });
 };
 
-let userCount;
+let connectedUsers = [];
 
 io.on("connection", function (socket) {
     const updateAllClients = () => {
@@ -338,8 +353,29 @@ io.on("connection", function (socket) {
         });
     };
 
-    userCount = userCount + 1;
-    io.emit("usercount", userCount);
+    connectedUsers = [...connectedUsers, {clientid: _.get(socket, "client.id"), name: ""}];
+    io.emit("usercount", connectedUsers);
+
+    socket.on('disconnect', function () {
+        connectedUsers = _.reject(c => c.clientid === _.get(socket, "client.id"));
+
+        io.emit("usercount", connectedUsers);
+    });
+
+    socket.on("createuser", ({name, facebookId}) => {
+        //la unica forma de que se llame esto es que el usuario se haya logueado en este cliente
+        connectedUsers = _.chain(connectedUsers)
+            .map(c => _.get(c, "clientid") === _.get(socket, "client.id") ? _.extend({}, c, {
+                name: _.chain(name).words().first().value()
+            }) : c)
+            .tap(cu => io.emit("usercount", cu)).value();
+
+        createUser(name, facebookId).then(resp => {
+            console.log(resp);
+        }).catch(err => {
+            console.log("ERROR: ", err);
+        });
+    });
 
     socket.on("allData", function () {
         updateAllClients();
@@ -475,17 +511,9 @@ io.on("connection", function (socket) {
             socket.emit("err", err);
         });
     });
-
-    socket.on('disconnect', function () {
-        userCount = userCount - 1;
-
-        io.emit("usercount", userCount)
-    });
 });
 
 // listen for requests :)
 let listener = http.listen(process.env.PORT || 3000, function () {
     console.log('Your app is listening on port ' + listener.address().port);
-
-    userCount = 0;
 });

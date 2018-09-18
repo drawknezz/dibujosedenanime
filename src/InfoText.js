@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import _ from './mixins';
 import {socketEmit} from './api';
 
-class Char extends Component {
+class InfoText extends Component {
     constructor() {
         super();
 
@@ -31,7 +31,7 @@ class Char extends Component {
             {
                 returns: (
                     <div>
-                        <img className={"editbtn"} src="/edit.svg" onClick={this.editInfoText}/>
+                        <img className={"editbtn"} src="/edit.svg" onClick={this.editInfoText} alt={"edit"}/>
                         <p><span>{
                             _.chain(this)
                                 .get("props.infoTxt", "")
@@ -81,4 +81,4 @@ class Char extends Component {
     }
 }
 
-export default Char;
+export default InfoText;

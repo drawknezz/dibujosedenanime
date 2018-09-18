@@ -38,7 +38,7 @@ class Members extends Component {
                 returns: (
                     <div className="bloque">
                         <div className="controles">
-                            <label>nombre: <input ref="memberNameTxt" onChange={this.checkInput}/></label>
+                            <label>nombre: <input ref="memberNameTxt" onChange={this.checkInput} defaultValue={_.get(this, "props.loginData.username")}/></label>
                             <button onClick={this.sendNewMember} disabled={_.get(this, "state.invalidInput")}>agregar</button>
                             <button onClick={this.resetStatus}>cancelar</button>
                         </div>
@@ -51,7 +51,7 @@ class Members extends Component {
                                         return _.get(self, "state.filterunassigned") ? (member.assignedTo ? false : member) : member;
                                     })
                                     .sortBy(m => m.name.toLowerCase())
-                                    .map((member, i) => {
+                                    .map((member) => {
                                         return (<Member key={member._id} name={member.name} id={member._id}
                                                         char={member.assignedTo} disabled={true}/>)
                                     }).value()
@@ -85,7 +85,7 @@ class Members extends Component {
                                         return _.get(self, "state.filterunassigned") ? (member.assignedTo ? false : member) : member;
                                     })
                                     .sortBy(m => m.name.toLowerCase())
-                                    .map((member, i) => {
+                                    .map((member) => {
                                         return (<Member key={member._id} name={member.name} id={member._id}
                                                         char={member.assignedTo}/>)
                                     }).value()

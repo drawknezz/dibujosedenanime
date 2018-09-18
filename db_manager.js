@@ -327,6 +327,30 @@ const setInfoTxt = function(txt) {
     })
 };
 
+const createUser = function(name, fid) {
+    return new Promise((res, rej) => {
+        getDB().then(db => {
+            db.find({type: "user", fid: fid}).toArray((err, docs) => {
+                if(_.isEmpty(docs)) {
+                    db.insertOne({type: "user", name: name, fid: fid, permissions: ["vote", "createmember"]}, (err, docs) => {
+                        if (err) rej(err);
+
+                        res(`usuario ${name} (${fid}) creado`);
+                    })
+                } else {
+                    db.updateOne({type: "user", fid: fid}, {$set: {name: name}}, (err, docs) => {
+                        if (err) rej(err);
+
+                        res(`usuario ${name} (${fid}) actualizado`);
+                    })
+                }
+            });
+        })
+    })
+};
+
+
+
 const test = function () {
 
 };
@@ -347,5 +371,6 @@ module.exports = {
     getLastReto: getLastReto,
     getInfoTxt,
     setInfoTxt,
+    createUser,
     test: test
 };
