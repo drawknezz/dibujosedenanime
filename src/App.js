@@ -57,19 +57,20 @@ class App extends Component {
                         </div> : ""}
 
                         <main>
-                            <div className="bloque">
+                            <div className="bloque pad">
                                 <InfoText infoTxt={_.get(this, "state.infoTxt.txt")}/>
                             </div>
 
                             <div className="bloque">
-                                <Reto reto={this.state.reto}/>
+                                <Reto reto={this.state.reto}
+                                      members={this.state.members}
+                                      loginData={_.get(this, "state.loginData")}
+                                />
                             </div>
 
-                            <div className="bloque">
+                            <div className="bloque pad sorteo">
                                 <Sorteo sorteo={this.state.sorteo}/>
                             </div>
-
-                            <Members members={this.state.members} loginData={_.get(this, "state.loginData")}/>
 
                             <Chars chars={this.state.chars}/>
                         </main>

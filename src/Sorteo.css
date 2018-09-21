@@ -1,0 +1,25 @@
+.sorteo-enter {
+    opacity: 0.01;
+}
+
+.sorteo-enter.sorteo-enter-active {
+    opacity: 1;
+    transition: opacity 300ms ease-out;
+}
+
+.sorteo-leave {
+    opacity: 1;
+}
+
+.sorteo-leave.sorteo-leave-active {
+    opacity: 0.01;
+    transition: opacity 300ms ease-out;
+}
+
+.bloque.sorteo {
+    padding: 25px;
+}
+
+.sorteocontents p {
+    margin: 0;
+}

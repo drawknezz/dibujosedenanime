@@ -30,7 +30,8 @@ class Login extends Component {
                         status: "connected",
                         returns: (<div className={"loginBlock"}>
                             <p><span>
-                                <img src="/facebook.svg" alt=""/> estas logueado como <strong>{_.get(this, "props.loginData.username")}</strong>
+                                <img src="/facebook.svg"
+                                     alt=""/> estas logueado como <strong>{_.get(this, "props.loginData.username")}</strong>
                             </span></p>
                         </div>)
                     },
@@ -50,6 +51,7 @@ class Login extends Component {
     }
 
     checkLoginStatus() {
+        let FB = _.get(window, "FB");
         _.attemptBound(FB, "getLoginStatus", (response) => {
             let onStatusChange = _.get(this, "props.onStatusChange");
             let status = _.get(response, "status");

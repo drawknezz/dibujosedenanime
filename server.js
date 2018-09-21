@@ -2,6 +2,7 @@ const express = require('express');
 const path = require("path");
 const fs = require("fs");
 const app = express();
+const mongodb = require("mongodb");
 
 const http = require("http").Server(app);
 const io = require("socket.io")(http);
@@ -67,7 +68,7 @@ const deleteSorteoEntryByChar = function (charId) {
         return Promise.props({
             sorteo: db.getSorteoForReto(_.get(char, "reto"))
         }).then(props => {
-            let newSorteo = _.chain(props).get("sorteo.values").reject(s => _.eq(charId, _.get(s, "char"))).value();
+            let newSorteo = _.chain(props).get("sorteo.values").reject(s => _.eq(charId, _.toString(_.get(s, "char")))).value();
 
             return db.setSorteoForReto(_.get(char, "reto"), newSorteo);
         });
@@ -79,7 +80,7 @@ const deleteSorteoEntryByMember = function (memberId) {
         return Promise.props({
             sorteo: db.getSorteoForReto(_.get(member, "reto"))
         }).then(props => {
-            let newSorteo = _.chain(props).get("sorteo.values").reject(s => _.eq(memberId, s.member)).value();
+            let newSorteo = _.chain(props).get("sorteo.values").reject(s => _.eq(memberId, _.toString(_.get(s, "member")))).value();
 
             return db.setSorteoForReto(_.get(member, "reto"), newSorteo);
         });
@@ -232,15 +233,15 @@ const assignCharToMember = function (id, pass) {
                     }).then(props => {
                         console.log(`assigning char to member ${_.get(props, "member.name")} (${id})`);
 
-                        let assignedCharsIds = _.chain(props).get("sorteo.values").map("char").value();
-                        let unassignedChars = _.chain(props.chars).reject(c => _.includes(assignedCharsIds, _.get(c, "_id"))).value();
+                        let assignedCharsIds = _.chain(props).get("sorteo.values").map("char").map(_.toString).value();
+                        let unassignedChars = _.chain(props.chars).reject(c => _.includes(assignedCharsIds, _.toString(_.get(c, "_id")))).value();
 
                         if (!_.isEmpty(unassignedChars)) {
-                            let charSorteo = _sortear([props.member._id], unassignedChars);
-                            let charAsociado = _.chain(props).get("chars").find({_id: _.get(charSorteo, "0.char")}).value();
+                            let charSorteo = _sortear([_.get(props, "member._id")], unassignedChars);
+                            let charAsociado = _.chain(props).get("chars").find({_id: mongodb.ObjectID(_.get(charSorteo, "0.char"))}).value();
                             let newSorteo = _.unionBy(charSorteo, _.get(props, "sorteo.values"), "char");
 
-                            return db.setSorteoForReto(_.get(reto, "_id"), newSorteo).then(() => {
+                            return db.setSorteoForReto(_.toString(_.get(reto, "_id")), newSorteo).then(() => {
                                 console.log(`${_.get(props, "member.name")} asociado a personaje ${_.get(charAsociado, "name")}`);
                                 return `${_.get(props, "member.name")} asociado a personaje ${_.get(charAsociado, "name")}`;
                             });
@@ -266,15 +267,15 @@ const assignMemberToChar = function (charId, pass) {
                 char: db.getCharById(charId)
             }).then(props => {
                 console.log(`asigning member to char ${_.get(props, "char.name")} (${charId})`);
-                let assignedMembersIds = _.chain(props).get("sorteo.values").map("member").value();
-                let unassignedMembersIds = _.chain(props.members).map("_id").difference(assignedMembersIds).value();
+                let assignedMembersIds = _.chain(props).get("sorteo.values").map("member").map(_.toString).value();
+                let unassignedMembersIds = _.chain(props).get("members").map("_id").map(_.toString).difference(assignedMembersIds).map(mongodb.ObjectID).value();
 
                 if (!_.isEmpty(unassignedMembersIds)) {
                     let charSorteo = _sortear(unassignedMembersIds, [props.char]);
-                    let miembroAsociado = _.chain(props).get("members").find({_id: _.get(charSorteo, "0.member")}).value();
+                    let miembroAsociado = _.chain(props).get("members").find({_id: mongodb.ObjectID(_.get(charSorteo, "0.member"))}).value();
                     let newSorteo = _.unionBy(charSorteo, _.get(props, "sorteo.values"), "char");
 
-                    return db.setSorteoForReto(_.get(reto, "_id"), newSorteo).then(() => {
+                    return db.setSorteoForReto(_.toString(_.get(reto, "_id")), newSorteo).then(() => {
                         console.log(`${_.get(props, "char.name")} asociado a miembro ${_.get(miembroAsociado, "name")}`);
                         return `${_.get(props, "char.name")} asociado a miembro ${_.get(miembroAsociado, "name")}`;
                     });
@@ -311,6 +312,12 @@ const updateInfoText = function (txt, pass) {
 
 const createUser = function(name, fid) {
     return db.createUser(name, fid);
+};
+
+const promoteMember = function (memberid, pass) {
+    return validatePass(pass).then(() => {
+        return db.assignPermissionsToMember(id, ["any"]);
+    });
 };
 
 const getAllData = function () {
@@ -511,6 +518,16 @@ io.on("connection", function (socket) {
             socket.emit("err", err);
         });
     });
+
+    socket.on("promotemember", ({id, pass}) => {
+        promoteMember(id, pass).then(resp => {
+            updateAllClients();
+            socket.emit("msg", resp);
+        }).catch(err => {
+            console.log("ERROR: ", err);
+            socket.emit("err", err);
+        });
+    })
 });
 
 // listen for requests :)

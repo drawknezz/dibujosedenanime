@@ -2,6 +2,8 @@ import React, {Component} from 'react';
 import Member from './Member';
 import _ from './mixins';
 import {socketEmit} from './api';
+import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
+import ReactCSSReplace from 'react-css-transition-replace';
 
 class Members extends Component {
     constructor() {
@@ -36,14 +38,45 @@ class Members extends Component {
             {
                 s: "agregando",
                 returns: (
-                    <div className="bloque">
-                        <div className="controles">
-                            <label>nombre: <input ref="memberNameTxt" onChange={this.checkInput} defaultValue={_.get(this, "props.loginData.username")}/></label>
-                            <button onClick={this.sendNewMember} disabled={_.get(this, "state.invalidInput")}>agregar</button>
-                            <button onClick={this.resetStatus}>cancelar</button>
-                        </div>
+                    <div className="members">
+                        <ReactCSSReplace
+                            component="div"
+                            className="controles"
+                            transitionName="controles"
+                            transitionEnterTimeout={300}
+                            transitionLeaveTimeout={300}
+                        >
+                            <div key={"agregandocontrols"}>
+                                <label>nombre: <input ref="memberNameTxt" onChange={this.checkInput}
+                                                      defaultValue={_.get(this, "props.loginData.username")}/></label>
+                                <button onClick={this.sendNewMember}
+                                        disabled={_.get(this, "state.invalidInput")}>agregar
+                                </button>
+                                <button onClick={this.resetStatus}>cancelar</button>
+                            </div>
+                        </ReactCSSReplace>
 
-                        <div className={"membersList " + (hasMembers ? "" : "empty")}>{
+                        <p>
+                                <span>
+                                    <input type="checkbox" checked={this.state.checked} ref="unassignedonlycheck"
+                                           onChange={this.unassignedFilterChange}
+                                           disabled={true}
+                                    /> solo no asignados
+                                </span>
+                        </p>
+                        <label>filtrar: <input type="text" ref="membersFilterTxt"
+                                               value={_.get(this, "state.filterTxt", "")}
+                                               onChange={this.filterMembers}
+                                               readOnly={true}
+                        /></label>
+
+                        <ReactCSSTransitionGroup
+                            component="div"
+                            className={"membersList " + (hasMembers ? "" : "empty")}
+                            transitionName="membertransition"
+                            transitionEnterTimeout={300}
+                            transitionLeaveTimeout={200}
+                        >{
                             (hasMembers ?
                                 _.chain(members)
                                     .filter(member => self.state.filtro.test(member.name))
@@ -56,28 +89,42 @@ class Members extends Component {
                                                         char={member.assignedTo} disabled={true}/>)
                                     }).value()
                                 : <p><span>No hay miembros asociados al reto actual...</span></p>)
-                        }
-                        </div>
+                        }</ReactCSSTransitionGroup>
                     </div>
                 )
             },
             {
                 s: "loaded",
                 returns: (
-                    <div className="bloque">
-                        <div className="controles">
-                            <button onClick={this.createMember}>agregar miembro</button>
-                            <p>
+                    <div className="members">
+                        <ReactCSSReplace
+                            component="div"
+                            className="controles"
+                            transitionName="controles"
+                            transitionEnterTimeout={300}
+                            transitionLeaveTimeout={300}
+                        >
+                            <div key={"loadedcontrols"}>
+                                <button onClick={this.createMember}>quiero participar en este reto!
+                                </button>
+                            </div>
+                        </ReactCSSReplace>
+
+                        <p>
                                 <span><input type="checkbox" checked={this.state.checked} ref="unassignedonlycheck"
                                              onChange={this.unassignedFilterChange}/> solo no asignados</span>
-                            </p>
-                        </div>
-
+                        </p>
                         <label>filtrar: <input type="text" ref="membersFilterTxt"
                                                value={_.get(this, "state.filterTxt", "")}
                                                onChange={this.filterMembers}/></label>
 
-                        <div className={"membersList " + (hasMembers ? "" : "empty")}>{
+                        <ReactCSSTransitionGroup
+                            component="div"
+                            className={"membersList " + (hasMembers ? "" : "empty")}
+                            transitionName="membertransition"
+                            transitionEnterTimeout={300}
+                            transitionLeaveTimeout={200}
+                        >{
                             (hasMembers ?
                                 _.chain(members)
                                     .filter(member => self.state.filtro.test(member.name))
@@ -90,8 +137,7 @@ class Members extends Component {
                                                         char={member.assignedTo}/>)
                                     }).value()
                                 : <p><span>No hay miembros asociados al reto actual...</span></p>)
-                        }
-                        </div>
+                        }</ReactCSSTransitionGroup>
                     </div>
                 )
             }

@@ -1,6 +1,7 @@
 import React from "react";
 import _ from './mixins';
 import {socketEmit} from './api';
+import Members from "./Members";
 
 class Reto extends React.Component {
     constructor() {
@@ -20,17 +21,22 @@ class Reto extends React.Component {
         return _.ruleMatch({s: status}, [
             {
                 s: "loading",
-                returns: <p><span>reto actual: "..."</span></p>
+                returns: <p><span>...</span></p>
             },
             {
                 s: "loaded",
-                returns: <div className={"bloquereto"}>
-                    <h2>{_.get(reto, "name", "no asignado")}</h2>
-                    <p><span>reto actual</span></p>
-                    <span>
-                        <button onClick={this.Asignar}>reasignar</button>
-                        <button onClick={this.Delete}>eliminar</button>
-                    </span>
+                returns: <div>
+                    <div className={"bloquereto"}>
+                        <h2>{_.get(reto, "name", "no asignado")}</h2>
+                        <p><span>reto actual</span></p>
+                        <span>
+                            <button onClick={this.Asignar}>reasignar</button>
+                            <button onClick={this.Delete}>eliminar</button>
+                        </span>
+                    </div>
+                    <div className={"retoscontent"}>
+                        <Members members={this.props.members} loginData={_.get(this, "props.loginData")}/>
+                    </div>
                 </div>
             },
             {

@@ -1,4 +1,6 @@
 @import url('https://fonts.googleapis.com/css?family=Indie+Flower|Josefin+Sans|Quicksand');
+@import 'Members.css';
+@import "Sorteo.css";
 
 * {
     box-sizing: border-box;
@@ -13,16 +15,22 @@ body {
 
 .bloque {
     position: relative;
-    background-color: #ffede9;
-    padding: 15px;
-    border-radius: 10px;
+    background-color: #fffef6;
+    padding: 0;
+    border-radius: 5px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: center;
     color: #a50e0e;
-    border: 1px solid #f29292;
+    border: 0;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    min-height: 40px;
+}
+
+.bloque.pad {
+    padding: 10px;
 }
 
 .bloque p {
@@ -40,12 +48,18 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding: 0 0 10px;
+    border-bottom: 1px solid #ffcac6;
 }
 
 .bloquereto p {
     text-align: center;
     margin-top: 0;
     font-size: 12px;
+}
+
+.retoscontent p {
+    text-align: left;
 }
 
 .bloquereto h2 {
@@ -208,25 +222,7 @@ footer {
     font-size: 11px;
 }
 
-.member img, .char img {
-    position: absolute;
-    width: 15px;
-    top: 10px;
-    right: 10px;
-    cursor: pointer;
-}
-
-.members {
-    background-color: #e9bcda;
-    padding: 15px;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: center;
-}
-
-.membersList, .charsList {
+.charsList {
     display: grid;
     padding: 10px;
     grid-template-columns: auto auto auto auto;
@@ -237,42 +233,34 @@ footer {
     background-color: #ffdfdf;
 }
 
-.membersList.empty, .charsList.empty {
+.charsList.empty {
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 13px;
 }
 
-.member p {
-    margin: 0;
-    text-align: left;
-}
-
-.member {
-    position: relative;
-    background-color: #f29292;
-    color: #782525;
-    padding: 15px;
-    border-radius: 5px;
-    box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
-    transition: all .2s ease-out;
-}
-
-.member:hover, .char:hover {
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
-}
-
-.member .memberName {
-    font-size: 16px;
-}
-
-.member .charname {
-    font-size: 12px;
-}
-
 .controles {
     font-size: 12px;
+    text-align: center;
+}
+
+.controles-enter {
+    opacity: 0.01;
+}
+
+.controles-enter.controles-enter-active {
+    opacity: 1;
+    transition: opacity 300ms ease-out;
+}
+
+.controles-leave {
+    opacity: 1;
+}
+
+.controles-leave.controles-leave-active {
+    opacity: 0.01;
+    transition: opacity 300ms ease-out;
 }
 
 .messages {
@@ -302,8 +290,12 @@ footer {
         opacity: 0;
     }
 
-    100% {
+    99% {
         opacity: 1;
+    }
+
+    100% {
+        display: none;
     }
 }
 
@@ -385,13 +377,13 @@ input[type="password"] {
 }
 
 @media (max-width: 760px) {
-    .membersList, .charsList {
+    .charsList {
         grid-template-columns: auto auto;
     }
 }
 
 @media (max-width: 600px) {
-    .membersList, .charsList {
+    .charsList {
         grid-template-columns: auto;
     }
 }

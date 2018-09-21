@@ -27,17 +27,17 @@ const setSorteoForReto = function (retoId, sorteoArr) {
 
         getDB().then(db => {
             db.find({
-                reto: retoId,
+                reto: mongodb.ObjectID(retoId),
                 type: "sorteo"
             }).toArray((err, docs) => {
                 if (err) rej(err);
 
                 if (_.isEmpty(docs)) {
-                    db.insertOne({reto: retoId, type: "sorteo", values: sorteoArr});
+                    db.insertOne({reto: mongodb.ObjectID(retoId), type: "sorteo", values: sorteoArr});
                     res("datos actualizados");
                 } else {
                     db.updateOne({
-                        reto: retoId,
+                        reto: mongodb.ObjectID(retoId),
                         type: "sorteo"
                     }, {$set: {values: sorteoArr}}, function (err, numReplaced) {
                         console.log(_.get(numReplaced, "matchedCount") + " docs updated for sort");
@@ -52,7 +52,7 @@ const setSorteoForReto = function (retoId, sorteoArr) {
 const getSorteoForReto = function (retoId) {
     return new Promise(function (res, rej) {
         getDB().then(db => {
-            db.findOne({reto: retoId, type: "sorteo"}, (err, docs) => {
+            db.findOne({reto: mongodb.ObjectID(retoId), type: "sorteo"}, (err, docs) => {
                 if (err) rej(err);
 
                 res(docs);
@@ -65,7 +65,7 @@ const getAllCharsForReto = function (retoId) {
     return new Promise(function (res, rej) {
         getDB().then(db => {
             db.find({
-                reto: retoId,
+                reto: mongodb.ObjectID(retoId),
                 type: "char"
             }).toArray((err, docs) => {
                 if (err) rej(err);
@@ -80,7 +80,7 @@ const getAllMembersForReto = function (retoId) {
         getDB().then(db => {
             db.find({
                 type: "member",
-                reto: retoId
+                reto: mongodb.ObjectID(retoId)
             }).toArray((err, docs) => {
                 if (err) rej(err);
                 res(docs);
@@ -94,7 +94,7 @@ const createMember = function (name, retoId) {
         getDB().then(db => {
             db.find({
                 type: "member",
-                reto: retoId,
+                reto: mongodb.ObjectID(retoId),
                 name: new RegExp("^" + name + "$", "i")
             }).toArray((err, docs) => {
                 if (err) rej(err);
@@ -103,7 +103,7 @@ const createMember = function (name, retoId) {
                     db.insertOne({
                         type: "member",
                         name: name,
-                        reto: retoId
+                        reto: mongodb.ObjectID(retoId)
                     }, (err, docs) => {
                         if (err) rej(`no se pudo crear miembro ${name}, error: ${err}`);
 
@@ -169,6 +169,27 @@ const getMemberById = function (id) {
             }).toArray((err, docs) => {
                 if (err) rej(err);
                 res(_.first(docs));
+            })
+        })
+    });
+};
+
+const assignPermissionsToMember = function (memberid, permissions) {
+    return new Promise(function (res, rej) {
+        getDB().then(db => {
+            getMemberById(memberid).then(member => {
+                db.update({
+                    type: "member",
+                    _id: mongodb.ObjectID(memberid),
+                }, {
+                    $set: {
+                        permissions: _.union(_.get(member, "permissions"), permissions)
+                    }
+                }, (err, docs) => {
+                    if(err) rej(err);
+
+                    res("usuario actualizado...");
+                });
             })
         })
     });
@@ -356,21 +377,22 @@ const test = function () {
 };
 
 module.exports = {
-    getAllCharsForReto: getAllCharsForReto,
-    getCharById: getCharById,
-    createChar: createChar,
-    deleteChar: deleteChar,
-    getAllMembersForReto: getAllMembersForReto,
-    getMemberById: getMemberById,
-    createMember: createMember,
-    deleteMember: deleteMember,
-    setSorteoForReto: setSorteoForReto,
-    getSorteoForReto: getSorteoForReto,
-    createReto: createReto,
-    deleteReto: deleteReto,
-    getLastReto: getLastReto,
+    getAllCharsForReto,
+    getCharById,
+    createChar,
+    deleteChar,
+    getAllMembersForReto,
+    getMemberById,
+    createMember,
+    deleteMember,
+    setSorteoForReto,
+    getSorteoForReto,
+    createReto,
+    deleteReto,
+    getLastReto,
     getInfoTxt,
     setInfoTxt,
     createUser,
+    assignPermissionsToMember,
     test: test
 };

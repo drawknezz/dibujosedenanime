@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import Char from './Char';
 import _ from './mixins';
 import {socketEmit} from './api';
+import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 
 class Chars extends Component {
     constructor() {
@@ -33,7 +34,7 @@ class Chars extends Component {
             {
                 s: "agregando",
                 returns: (
-                    <div className="bloque">
+                    <div className="bloque pad">
                         <div className="controles">
                             <label>nombre: <input ref="charNameTxt"/></label>
                             <label>serie: <input ref="charSerieTxt"/></label>
@@ -42,14 +43,20 @@ class Chars extends Component {
                             <button onClick={this.resetStatus}>cancelar</button>
                         </div>
 
-                        <div className="charsList">{
+                        <ReactCSSTransitionGroup
+                            component="div"
+                            className={"charsList " + (_.isEmpty(chars) ? "empty" : "")}
+                            transitionName="membertransition"
+                            transitionEnterTimeout={300}
+                            transitionLeaveTimeout={200}
+                        >{
                             _.chain(chars)
                                 .sortBy(m => m.name.toLowerCase())
                                 .map(char => {
                                     return (<Char key={char._id} name={char.name} serie={char.serie} id={char._id}
                                                   dis={true} member={char.assignedTo}/>)
                                 }).value()
-                        }</div>
+                        }</ReactCSSTransitionGroup>
                     </div>
                 )
             },
@@ -57,20 +64,26 @@ class Chars extends Component {
             {
                 s: "agregandomany",
                 returns: (
-                    <div className="bloque">
+                    <div className="bloque pad">
                         <div className="controles">
                             <p><span>Agrega cada personaje separado por coma, con este formato: "nombre:serie"</span>
                             </p>
 
                             <p>nombres:</p>
                             <p><textarea ref="manyNamesTxt" onChange={this.updateManyCharsInfo}/></p>
-                            <div className="manyChars">{
+                            <ReactCSSTransitionGroup
+                                component="div"
+                                className={"charsList " + (_.isEmpty(chars) ? "empty" : "")}
+                                transitionName="membertransition"
+                                transitionEnterTimeout={300}
+                                transitionLeaveTimeout={200}
+                            >{
                                 _.chain(this).get("state.manychars").map((c, i) =>
                                     <div className="manyCharsEl" key={i}>
                                         <p><span className="manyCharsName"><strong>{c.name}</strong></span></p>
                                         <p><span className="manyCharsSerie">{c.serie}</span></p>
                                     </div>).value()
-                            }</div>
+                            }</ReactCSSTransitionGroup>
                             <p>
                                 <label>clave: <input type="password" ref="claveInput"/></label>
                                 <button onClick={this.sendManyChars}>agregar ({_.get(this, "state.manychars.length")})
@@ -80,14 +93,20 @@ class Chars extends Component {
 
                         </div>
 
-                        <div className="charsList">{
+                        <ReactCSSTransitionGroup
+                            component="div"
+                            className={"charsList " + (_.isEmpty(chars) ? "empty" : "")}
+                            transitionName="membertransition"
+                            transitionEnterTimeout={300}
+                            transitionLeaveTimeout={200}
+                        >{
                             _.chain(chars)
                                 .sortBy(m => m.name.toLowerCase())
                                 .map(char => {
                                     return (<Char key={char._id} name={char.name} serie={char.serie} id={char._id}
                                                   dis={true} member={char.assignedTo}/>)
                                 }).value()
-                        }</div>
+                        }</ReactCSSTransitionGroup>
                     </div>
                 )
             },
@@ -95,13 +114,19 @@ class Chars extends Component {
             {
                 s: "loaded",
                 returns: (
-                    <div className="bloque">
+                    <div className="bloque pad">
                         <div className="controles">
                             <button onClick={this.createChar}>agregar personaje</button>
                             <button onClick={this.createMany}>agregar varios</button>
                         </div>
 
-                        <div className={"charsList" + (_.isEmpty(chars) ? " empty" : "")}>{
+                        <ReactCSSTransitionGroup
+                            component="div"
+                            className={"charsList " + (_.isEmpty(chars) ? "empty" : "")}
+                            transitionName="membertransition"
+                            transitionEnterTimeout={300}
+                            transitionLeaveTimeout={200}
+                        >{
                             (
                                 _.isEmpty(chars) ?
                                     <p><span>No hay personajes asociados al reto actual...</span></p> :
@@ -114,7 +139,7 @@ class Chars extends Component {
                                         }).value()
                             )
 
-                        }</div>
+                        }</ReactCSSTransitionGroup>
                     </div>
                 )
             }
