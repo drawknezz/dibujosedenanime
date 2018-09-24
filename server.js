@@ -356,7 +356,7 @@ let connectedUsers = [];
 io.on("connection", function (socket) {
     const updateAllClients = () => {
         getAllData().then(data => {
-            socket.emit("allData", data)
+            io.emit("allData", data)
         });
     };
 
