@@ -370,6 +370,88 @@ const createUser = function(name, fid) {
     })
 };
 
+const getUserById = function(fid) {
+    return new Promise((res, rej) => {
+        getDB().then(db => {
+            db.findOne({type: "user", fid: fid}).toArray((err, docs) => {
+                if(err) rej(err);
+                res(docs);
+            });
+        })
+    })
+};
+
+const createPoll = function(name) {
+    return new Promise((res, rej) => {
+        getDB().then(db => {
+            db.find({type: "poll", name: name}).toArray((err, docs) => {
+                if(_.isEmpty(docs)) {
+                    db.insertOne({type: "poll", name: name}, (err, docs) => {
+                        if (err) rej(err);
+
+                        res(`votacion ${name} creada...`);
+                    })
+                } else {
+                    db.updateOne({type: "poll", name: name}, {$set: {name: name}}, (err, docs) => {
+                        if (err) rej(err);
+
+                        res(`votacion ${name} actualizada...`);
+                    })
+                }
+            });
+        })
+    })
+};
+
+const deletePoll = function(pollId) {
+    return new Promise((res, rej) => {
+        getDB().then(db => {
+            db.deleteOne({
+                "type": "poll",
+                _id: mongodb.ObjectID(pollId)
+            }, (err, docs) => {
+                if (err) rej("no se pudo eliminar la votacion...");
+
+                console.log(err);
+
+                res("votacion " + id + " eliminada")
+            });
+        })
+    })
+};
+
+const getPollByName = function(name) {
+    return new Promise((res, rej) => {
+        getDB().then(db => {
+            db.findOne({
+                "type": "poll",
+                name: name
+            }, (err, docs) => {
+                if (err) rej("error al consultar por la votacion...");
+
+                console.log("ERROR: ", err);
+
+                res(docs)
+            });
+        })
+    })
+};
+
+const getAllPolls = function() {
+    return new Promise((res, rej) => {
+        getDB().then(db => {
+            db.find({
+                "type": "poll",
+            }).toArray((err, docs) => {
+                if (err) rej("error al obtener votaciones activas...");
+
+                console.log("ERROR: ", err);
+
+                res(docs)
+            });
+        })
+    })
+};
 
 
 const test = function () {
@@ -394,5 +476,10 @@ module.exports = {
     setInfoTxt,
     createUser,
     assignPermissionsToMember,
+    getUserById,
+    createPoll,
+    deletePoll,
+    getPollByName,
+    getAllPolls,
     test: test
 };

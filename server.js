@@ -320,6 +320,30 @@ const promoteMember = function (memberid, pass) {
     });
 };
 
+const testForPermissions = function(userId, permissions) {
+    return new Promise((res, rej) => {
+        return db.getUserById(userId).then(user => {
+            let userpermissions = _.get(user, "permissions");
+
+            if (_.includes(userpermissions, "any") || _.chain(permissions).difference(userpermissions).isEmpty().value()) {
+                res(`${_.get(user, "name", "hmm")}, tienes permisos para eso uwu...`)
+            } else {
+                rej(`${_.get(user, "name", "hmm")}, no tienes permisos para eso...`);
+            }
+        })
+    })
+};
+
+const createPoll = function(name, userId) {
+    return new Promise(res => {
+        return testForPermissions(userId, ["createpoll"]).then(() => {
+            db.createPoll(name).then(() => {
+                res("votacion creada con exito")
+            })
+        });
+    });
+};
+
 const getAllData = function () {
     return db.getLastReto().then(reto => {
         return Promise.props({
@@ -327,7 +351,8 @@ const getAllData = function () {
             reto: reto,
             sorteo: db.getSorteoForReto(_.get(reto, "_id")),
             chars: db.getAllCharsForReto(_.get(reto, "_id")),
-            members: db.getAllMembersForReto(_.get(reto, "_id"))
+            members: db.getAllMembersForReto(_.get(reto, "_id")),
+            polls: db.getAllPolls()
         }).then(props => {
             let fullChars = _.chain(props.chars).map(c => {
                 let sorteoElement = _.find(_.get(props, "sorteo.values"), {char: _.get(c, "_id")});
@@ -527,7 +552,17 @@ io.on("connection", function (socket) {
             console.log("ERROR: ", err);
             socket.emit("err", err);
         });
-    })
+    });
+
+    socket.on("createpoll", ({name, userid}) => {
+        createPoll(name, userid).then(resp => {
+            updateAllClients();
+            socket.emit("msg", resp);
+        }).catch(err => {
+            console.log("ERROR: ", err);
+            socket.emit("err", err);
+        });
+    });
 });
 
 // listen for requests :)
