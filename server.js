@@ -325,7 +325,7 @@ const testForPermissions = function(userId, permissions) {
         return db.getUserById(userId).then(user => {
             let userpermissions = _.get(user, "permissions");
 
-            if (_.includes(userpermissions, "any") || _.chain(permissions).difference(userpermissions).isEmpty().value()) {
+            if (_.includes(userpermissions, "any") || _.chain(permissions).ensureArray().difference(userpermissions).isEmpty().value()) {
                 res(`${_.get(user, "name", "hmm")}, tienes permisos para eso uwu...`)
             } else {
                 rej(`${_.get(user, "name", "hmm")}, no tienes permisos para eso...`);
@@ -335,10 +335,20 @@ const testForPermissions = function(userId, permissions) {
 };
 
 const createPoll = function(name, userId) {
-    return new Promise(res => {
-        return testForPermissions(userId, ["createpoll"]).then(() => {
-            db.createPoll(name).then(() => {
+    return new Promise((res, rej) => {
+        return testForPermissions(userId, "createpoll").then(() => {
+            return db.createPoll(name).then(() => {
                 res("votacion creada con exito")
+            })
+        }).catch(err => rej(err));
+    });
+};
+
+const createPollEntry = function(name, pollid, userId) {
+    return new Promise(res => {
+        return testForPermissions(userId, "createpollentry").then(() => {
+            return db.createPollEntry(name).then(() => {
+                res("opcion creada con exito")
             })
         });
     });
@@ -563,6 +573,16 @@ io.on("connection", function (socket) {
             socket.emit("err", err);
         });
     });
+
+    socket.on("createpollentry", ({name, pollid, userid}) => {
+        createPollEntry(name, pollid, userid).then(resp => {
+            updateAllClients();
+            socket.emit("msg", resp);
+        }).catch(err => {
+            console.log("ERROR: ", err);
+            socket.emit("err", err);
+        });
+    })
 });
 
 // listen for requests :)

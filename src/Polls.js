@@ -2,8 +2,9 @@ import React from 'react';
 import _ from './mixins';
 import {socketEmit} from './api';
 import ReactCSSReplace from 'react-css-transition-replace';
+import Poll from "./Poll";
 
-class Votaciones extends React.Component {
+class Polls extends React.Component {
     constructor() {
         super();
 
@@ -26,9 +27,24 @@ class Votaciones extends React.Component {
                         <p><span><button onClick={this.creatingPoll}>crear nueva votacion</button></span></p>
                         <div className="pollslist">{
                             _.chain(this).get("props.polls").map(poll => {
-                                return <div className="poll" key={_.get(poll, "_id")}>
-                                    <span>{_.get(poll, "name", "votacion sin nombre")}</span>
-                                </div>
+                                return <Poll key={_.get(poll, "_id")} name={poll.name} entries={poll.entries}/>
+                            }).value()
+                        }</div>
+                    </div>
+                </div>,
+            },
+            {
+                s: "creandopoll",
+                polls: _.negate(_.isEmpty),
+                returns: <div className="pollscontents">
+                    <div key="pollscontroles">
+                        <p><span>
+                            <input type="text" ref="pollnametxt"/>
+                            <button onClick={this.createPoll}>crear nueva votacion</button>
+                        </span></p>
+                        <div className="pollslist">{
+                            _.chain(this).get("props.polls").map(poll => {
+                                return <Poll key={_.get(poll, "_id")} name={poll.name} entries={poll.entries}/>
                             }).value()
                         }</div>
                     </div>
@@ -45,7 +61,10 @@ class Votaciones extends React.Component {
     }
 
     createPoll(){
-        console.log("creating poll")
+        const pollname = _.get(this, "refs.pollnametxt.value");
+        const userid = _.get(this, "props.loginData.fid");
+
+        socketEmit("createpoll", {name: pollname, userid: userid});
     }
 
     creatingEntry() {
@@ -65,4 +84,4 @@ class Votaciones extends React.Component {
     }
 }
 
-export default Votaciones;
+export default Polls;
