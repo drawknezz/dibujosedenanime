@@ -1,0 +1,29 @@
+.poll {
+    background-color: #ffe4e4;
+    border-radius: 5px;
+    padding: 10px;
+    margin: 10px;
+}
+
+.poll p {
+    margin: 0;
+}
+
+.entry {
+    font-size: 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+}
+
+.entryname {
+    flex: 0 1 10%;
+}
+
+.entryvotes {
+    flex: 1 1;
+}
+
+.entrybtns {
+    flex: 0 1 10%;
+}

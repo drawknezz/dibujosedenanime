@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import _ from './mixins';
 import axios from 'axios';
+import {socketEmit} from "./api";
 
 /* globals FB */
 
@@ -10,7 +11,7 @@ class Login extends Component {
 
         this.state = {status: "loaded"};
 
-        _.bindAll(this, "checkLoginStatus", "login", "logout", "resetState");
+        _.bindAll(this, "checkLoginStatus", "login", "logout", "promoting", "promote", "resetState");
     }
 
     componentDidMount() {
@@ -22,19 +23,59 @@ class Login extends Component {
 
     render() {
         let loginData = _.get(this, "props.loginData", {});
-        return _.ruleMatch(loginData, [
+        return _.ruleMatch(_.extend({}, loginData, {
+            st: _.get(this, "state.status"),
+            ud: _.get(this, "props.userData")
+        }), [
             {
                 status: Boolean,
                 $inner: [
                     {
                         status: "connected",
-                        returns: (<div className={"loginBlock"}>
-                            <p><span>
-                                <img src="/facebook.svg"
-                                     alt=""/> estas logueado como <strong>{_.get(this, "props.loginData.username")}</strong>
-                            </span></p>
-                        </div>)
+                        $inner: [
+                            {
+                                st: "promoting",
+                                returns: (<div className={"loginBlock"}>
+                                    <p><span>
+                                        <img src="/facebook.svg" alt=""/>&nbsp;
+                                        estas logueado como <strong>{_.get(this, "props.loginData.username")}</strong>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <input type="password" ref="passtxt"/>&nbsp;
+                                        <a onClick={this.promote}>💎 ok</a>&nbsp;
+                                        <a onClick={this.resetState}>cancelar</a>
+                                    </span></p>
+                                </div>)
+                            },
+                            {
+                                "ud.permissions": _.partial(_.includes, _, "any"),
+                                returns: (<div className={"loginBlock"}>
+                                    <p><span>
+                                        <img src="/facebook.svg" alt=""/>&nbsp;
+                                        estas logueado como <strong>{_.get(this, "props.loginData.username")}</strong>&nbsp;
+                                        💎 <strong>eres admin</strong>
+                                    </span></p>
+                                </div>)
+                            },
+                            {
+                                ud: Boolean,
+                                returns: (<div className={"loginBlock"}>
+                                    <p><span>
+                                        <img src="/facebook.svg" alt=""/>&nbsp;
+                                        estas logueado como <strong>{_.get(this, "props.loginData.username")}</strong>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <a onClick={this.promoting}>💎 promover</a>
+                                    </span></p>
+                                </div>)
+                            },
+                            {
+                                returns: (<div className={"loginBlock"}>
+                                    <p><span>
+                                        <img src="/facebook.svg" alt=""/>&nbsp;
+                                        estas logueado como <strong>{_.get(this, "props.loginData.username")}</strong>&nbsp;&nbsp;&nbsp;&nbsp;
+                                    </span></p>
+                                </div>)
+                            }
+                        ]
                     },
+
                     {
                         returns: (<div className={"loginBlock"}>
                             <p><img src="/facebook.svg" alt=""/> <a onClick={this.login}>logueate</a></p>
@@ -75,6 +116,19 @@ class Login extends Component {
 
     logout() {
         FB.logout();
+    }
+
+    promoting() {
+        this.setState({status: "promoting"})
+    }
+
+    promote() {
+        const userid = _.get(this, "props.loginData.authResponse.userID");
+        const pass = _.get(this, "refs.passtxt.value");
+
+        socketEmit("promotemember", {id: userid, pass: pass});
+
+        this.resetState();
     }
 
     resetState() {

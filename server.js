@@ -310,17 +310,17 @@ const updateInfoText = function (txt, pass) {
     });
 };
 
-const createUser = function(name, fid) {
+const createUser = function (name, fid) {
     return db.createUser(name, fid);
 };
 
 const promoteMember = function (memberid, pass) {
     return validatePass(pass).then(() => {
-        return db.assignPermissionsToMember(id, ["any"]);
+        return db.assignPermissionsToMember(memberid, ["any"]);
     });
 };
 
-const testForPermissions = function(userId, permissions) {
+const testForPermissions = function (userId, permissions) {
     return new Promise((res, rej) => {
         return db.getUserById(userId).then(user => {
             let userpermissions = _.get(user, "permissions");
@@ -334,7 +334,7 @@ const testForPermissions = function(userId, permissions) {
     })
 };
 
-const createPoll = function(name, userId) {
+const createPoll = function (name, userId) {
     return new Promise((res, rej) => {
         return testForPermissions(userId, "createpoll").then(() => {
             return db.createPoll(name).then(() => {
@@ -344,14 +344,16 @@ const createPoll = function(name, userId) {
     });
 };
 
-const createPollEntry = function(name, pollid, userId) {
-    return new Promise(res => {
-        return testForPermissions(userId, "createpollentry").then(() => {
-            return db.createPollEntry(name).then(() => {
-                res("opcion creada con exito")
-            })
-        });
+const createPollEntry = function (name, pollid, userId) {
+    return new Promise((res, rej) => {
+        return db.createPollEntry(name, pollid).then(() => {
+            res("opcion creada con exito")
+        })
     });
+};
+
+const votePollEntry = function (entryid, pollid, userid) {
+    return db.voteEntryPoll(entryid, pollid, userid);
 };
 
 const getAllData = function () {
@@ -404,7 +406,7 @@ io.on("connection", function (socket) {
         io.emit("usercount", connectedUsers);
     });
 
-    socket.on("createuser", ({name, facebookId}) => {
+    socket.on("userlogged", ({name, facebookId}) => {
         //la unica forma de que se llame esto es que el usuario se haya logueado en este cliente
         connectedUsers = _.chain(connectedUsers)
             .map(c => _.get(c, "clientid") === _.get(socket, "client.id") ? _.extend({}, c, {
@@ -414,8 +416,13 @@ io.on("connection", function (socket) {
 
         createUser(name, facebookId).then(resp => {
             console.log(resp);
+
+            db.getUserById(facebookId).then(user => {
+                socket.emit("userdata", user);
+            })
+
         }).catch(err => {
-            console.log("ERROR: ", err);
+            console.log("userlogged/ERROR: ", err);
         });
     });
 
@@ -582,10 +589,22 @@ io.on("connection", function (socket) {
             console.log("ERROR: ", err);
             socket.emit("err", err);
         });
-    })
+    });
+
+    socket.on("voteentry", ({entryid, pollid, userid}) => {
+        votePollEntry(entryid, pollid, userid).then(resp => {
+            updateAllClients();
+            socket.emit("msg", resp);
+        }).catch(err => {
+            console.log("ERROR: ", err);
+            socket.emit("err", err);
+        });
+    });
 });
 
 // listen for requests :)
 let listener = http.listen(process.env.PORT || 3000, function () {
     console.log('Your app is listening on port ' + listener.address().port);
+
+    db.test();
 });

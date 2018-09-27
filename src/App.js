@@ -38,7 +38,7 @@ class App extends Component {
             {
                 returns: (
                     <div>
-                        <Login onStatusChange={this.onLoginStatusChange} loginData={_.get(this, "state.loginData")}/>
+                        <Login onStatusChange={this.onLoginStatusChange} loginData={_.get(this, "state.loginData")} userData={_.get(this, "state.userData")}/>
 
                         <header>
                             <h1 data-testid="pagetitle">
@@ -125,7 +125,7 @@ class App extends Component {
         this.setState({loginData: loginData});
 
         if (_.get(loginData, "username")) {
-            socketEmit("createuser", {
+            socketEmit("userlogged", {
                 name: _.get(loginData, "username"),
                 facebookId: _.get(loginData, "authResponse.userID")
             });
@@ -141,6 +141,10 @@ class App extends Component {
             this.setState({status: "loaded"});
 
             this.updateAll(data);
+        });
+
+        onSocket("userdata", userData => {
+            this.setState({userData: userData});
         });
 
         onSocket("msg", this.showMessage);

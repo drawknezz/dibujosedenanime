@@ -12,7 +12,7 @@ class Polls extends React.Component {
             status: "loaded"
         };
 
-        _.bindAll(this, "createEntry", "creatingEntry", "vote", "createPoll", "creatingPoll")
+        _.bindAll(this, "resetState", "createPoll", "creatingPoll")
     }
 
     render() {
@@ -27,7 +27,7 @@ class Polls extends React.Component {
                         <p><span><button onClick={this.creatingPoll}>crear nueva votacion</button></span></p>
                         <div className="pollslist">{
                             _.chain(this).get("props.polls").map(poll => {
-                                return <Poll key={_.get(poll, "_id")} name={poll.name} entries={poll.entries}/>
+                                return <Poll key={_.get(poll, "_id")} poll={poll} loginData={_.get(this, "props.loginData")}/>
                             }).value()
                         }</div>
                     </div>
@@ -44,7 +44,7 @@ class Polls extends React.Component {
                         </span></p>
                         <div className="pollslist">{
                             _.chain(this).get("props.polls").map(poll => {
-                                return <Poll key={_.get(poll, "_id")} name={poll.name} entries={poll.entries}/>
+                                return <Poll key={_.get(poll, "_id")} poll={poll}/>
                             }).value()
                         }</div>
                     </div>
@@ -62,24 +62,14 @@ class Polls extends React.Component {
 
     createPoll(){
         const pollname = _.get(this, "refs.pollnametxt.value");
-        const userid = _.get(this, "props.loginData.fid");
+        const userid = _.get(this, "props.loginData.authResponse.userID");
 
         socketEmit("createpoll", {name: pollname, userid: userid});
+
+        this.resetState();
     }
 
-    creatingEntry() {
-        this.setState({status: "creandoentry"})
-    }
-
-    createEntry() {
-        let pass = _.get(this, "refs.sorteoPassInput.value");
-
-        socketEmit("sortear", {pass: pass});
-
-        this.resetState()
-    }
-
-    vote() {
+    resetState() {
         this.setState({status: "loaded"});
     }
 }
