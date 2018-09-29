@@ -448,7 +448,7 @@ const ensureUserHasNotVotedOnPoll = function (pollid, userid) {
                 user: userid
             }).toArray((err, docs) => {
                 if (!_.isEmpty(docs)) {
-                    rej("ya votaste en esta votacion...")
+                    rej("ya votaste en esta votacion...");
                 } else {
                     res(true)
                 }

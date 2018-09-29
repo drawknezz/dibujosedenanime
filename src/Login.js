@@ -1,9 +1,8 @@
 import React, {Component} from 'react';
 import _ from './mixins';
-import axios from 'axios';
 import {socketEmit} from "./api";
-
-/* globals FB */
+import {connect} from 'react-redux';
+import {checkLoginStatus, login, logout, promoteUser} from "./actions";
 
 class Login extends Component {
     constructor() {
@@ -11,20 +10,16 @@ class Login extends Component {
 
         this.state = {status: "loaded"};
 
-        _.bindAll(this, "checkLoginStatus", "login", "logout", "promoting", "promote", "resetState");
+        _.bindAll(this, "promoting", "promote", "resetState");
     }
 
     componentDidMount() {
-        this.checkLoginStatus();
-
-        FB.Event.subscribe('auth.login', this.checkLoginStatus);
-        FB.Event.subscribe('auth.logout', this.checkLoginStatus);
+        _.attemptBound(this, "props.checkLoginStatus");
     }
 
     render() {
         let loginData = _.get(this, "props.loginData", {});
         return _.ruleMatch(_.extend({}, loginData, {
-            st: _.get(this, "state.status"),
             ud: _.get(this, "props.userData")
         }), [
             {
@@ -34,11 +29,11 @@ class Login extends Component {
                         status: "connected",
                         $inner: [
                             {
-                                st: "promoting",
+                                "ud.status": "promoting",
                                 returns: (<div className={"loginBlock"}>
                                     <p><span>
                                         <img src="/facebook.svg" alt=""/>&nbsp;
-                                        estas logueado como <strong>{_.get(this, "props.loginData.username")}</strong>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        estas logueado como <strong>{_.get(this, "props.userData.name")}</strong>&nbsp;&nbsp;&nbsp;&nbsp;
                                         <input type="password" ref="passtxt"/>&nbsp;
                                         <a onClick={this.promote}>💎 ok</a>&nbsp;
                                         <a onClick={this.resetState}>cancelar</a>
@@ -50,8 +45,10 @@ class Login extends Component {
                                 returns: (<div className={"loginBlock"}>
                                     <p><span>
                                         <img src="/facebook.svg" alt=""/>&nbsp;
-                                        estas logueado como <strong>{_.get(this, "props.loginData.username")}</strong>&nbsp;
-                                        💎 <strong>eres admin</strong>
+                                        estas logueado como <strong>{_.get(this, "props.userData.name")}</strong>&nbsp;
+                                        💎 <strong>eres admin</strong>&nbsp;&nbsp;&nbsp;
+                                        (<a onClick={_.get(this, "props.logout")}>salir</a>)
+
                                     </span></p>
                                 </div>)
                             },
@@ -60,8 +57,9 @@ class Login extends Component {
                                 returns: (<div className={"loginBlock"}>
                                     <p><span>
                                         <img src="/facebook.svg" alt=""/>&nbsp;
-                                        estas logueado como <strong>{_.get(this, "props.loginData.username")}</strong>&nbsp;&nbsp;&nbsp;&nbsp;
-                                        <a onClick={this.promoting}>💎 promover</a>
+                                        estas logueado como <strong>{_.get(this, "props.userData.name")}</strong>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <a onClick={this.promoting}>💎 promover</a>&nbsp;&nbsp;&nbsp;
+                                        (<a onClick={_.get(this, "props.logout")}>salir</a>)
                                     </span></p>
                                 </div>)
                             },
@@ -69,7 +67,8 @@ class Login extends Component {
                                 returns: (<div className={"loginBlock"}>
                                     <p><span>
                                         <img src="/facebook.svg" alt=""/>&nbsp;
-                                        estas logueado como <strong>{_.get(this, "props.loginData.username")}</strong>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        estas logueado como <strong>{_.get(this, "props.userData.name")}</strong>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        (<a onClick={_.get(this, "props.logout")}>salir</a>)
                                     </span></p>
                                 </div>)
                             }
@@ -78,7 +77,7 @@ class Login extends Component {
 
                     {
                         returns: (<div className={"loginBlock"}>
-                            <p><img src="/facebook.svg" alt=""/> <a onClick={this.login}>logueate</a></p>
+                            <p><img src="/facebook.svg" alt=""/> <a onClick={_.get(this, "props.login")}>logueate</a></p>
                         </div>)
                     }
                 ]
@@ -91,35 +90,9 @@ class Login extends Component {
         ]);
     }
 
-    checkLoginStatus() {
-        let FB = _.get(window, "FB");
-        _.attemptBound(FB, "getLoginStatus", (response) => {
-            let onStatusChange = _.get(this, "props.onStatusChange");
-            let status = _.get(response, "status");
-            let userId = _.get(response, "authResponse.userID");
-            let accToken = _.get(response, "authResponse.accessToken");
-
-            if (status === "connected") {
-                axios(`https://graph.facebook.com/${userId}?fields=name&access_token=${accToken}`)
-                    .then((resp) => {
-                        onStatusChange(_.extend({}, response, {username: _.get(resp, "data.name")}));
-                    })
-            } else {
-                onStatusChange(response);
-            }
-        });
-    }
-
-    login() {
-        FB.login();
-    }
-
-    logout() {
-        FB.logout();
-    }
-
     promoting() {
-        this.setState({status: "promoting"})
+        this.setState({status: "promoting"});
+        this.props.promote()
     }
 
     promote() {
@@ -136,4 +109,17 @@ class Login extends Component {
     }
 }
 
-export default Login;
+const mapState = function(state) {
+    return state;
+};
+
+const mapDispatch = function(dispatch) {
+    return {
+        checkLoginStatus: () => dispatch(checkLoginStatus()),
+        login: () => dispatch(login()),
+        logout: () => dispatch(logout()),
+        promote: () => dispatch(promoteUser())
+    }
+};
+
+export default connect(mapState, mapDispatch)(Login);

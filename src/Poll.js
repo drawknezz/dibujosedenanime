@@ -15,6 +15,9 @@ class Poll extends React.Component {
     }
 
     render() {
+        const entries = _.chain(this).get("props.poll.entries").sortBy(a => -_.get(a, "votes.length", 0)).value();
+        const higherVotes = _.chain(entries).map("votes.length").sortBy(a => a).last().dflt(1).value();
+
         return _.ruleMatch({st: _.get(this, "state.status")}, [
             {
                 st: "addingentry",
@@ -23,7 +26,7 @@ class Poll extends React.Component {
                         <p><span>{_.get(this, "props.poll.name", "unnamed")}</span></p>
                         <div className="entries">
                             {
-                                _.chain(this).get("props.poll.entries")
+                                _.chain(entries)
                                     .map(entry => <div className="entry" key={_.get(entry, "_id")}>{
                                         <span>
                                             <strong>{_.get(entry, "name")}</strong>&nbsp;&nbsp;&nbsp;
@@ -50,10 +53,12 @@ class Poll extends React.Component {
                         <p><span>{_.get(this, "props.poll.name", "unnamed")}</span></p>
                         <div className="entries">
                             {
-                                _.chain(this).get("props.poll.entries")
+                                _.chain(entries)
                                     .map(entry => <div className="entry" key={_.get(entry, "_id")}>
                                         <span className="entryname"><strong>{_.get(entry, "name")}</strong></span>
-                                        <span className="entryvotes">{_.get(entry, "votes.length")} votos&nbsp;</span>
+                                        <div className="meter">
+                                            <span style={{width: `${_.get(entry, "votes.length", 1) * 100 / higherVotes}%`}}/>
+                                        </div>
                                         <a className="entrybtns" onClick={this.voteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>votar</a>
                                     </div>)
                                     .value()

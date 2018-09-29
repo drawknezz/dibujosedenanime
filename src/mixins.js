@@ -10,7 +10,7 @@ _.mixin({
      * @return {*}
      */
     attemptBound: function(ctx, fnName) {
-        return !!ctx && _.isFunction(_.get(ctx, fnName)) ? ctx[fnName].apply(ctx, _.slice(arguments, 2)) : null;
+        return !!ctx && _.isFunction(_.get(ctx, fnName)) ? _.get(ctx, fnName).apply(ctx, _.slice(arguments, 2)) : null;
     },
     /**
      * Llama a la funcion fnName usando el contexto ctx. Si fnName no es una función, o si ctx es falsy, retorna null.

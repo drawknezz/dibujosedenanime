@@ -20,6 +20,11 @@ if (process.env.NODE_ENV === 'local') {
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'build')));
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
 
 const _ = require("./mixins");
 const Promise = require("bluebird");
@@ -31,6 +36,14 @@ process.on("unhandledRejection", handleError);
 
 app.get("/", function (request, response) {
     response.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+
+app.get("/getUserPermission", function(request, response) {
+    const user = _.get(request, "query.userid");
+    console.log("getting permissions for user id: ", user);
+    db.getUserById(user).then(userdata => {
+        response.send(_.get(userdata, "permissions"));
+    })
 });
 
 const validatePass = function (pass) {
@@ -605,6 +618,4 @@ io.on("connection", function (socket) {
 // listen for requests :)
 let listener = http.listen(process.env.PORT || 3000, function () {
     console.log('Your app is listening on port ' + listener.address().port);
-
-    db.test();
 });

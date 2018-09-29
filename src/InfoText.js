@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import _ from './mixins';
 import {socketEmit} from './api';
+import {connect} from "react-redux";
 
 class InfoText extends Component {
     constructor() {
@@ -12,8 +13,25 @@ class InfoText extends Component {
     }
 
     render() {
+        const infotext = _.chain(this)
+            .get("props.infoTxt", "")
+            .thru(txt => txt.match(/([^*]+|\*[^*]+\*)|\*/g))
+            .map((phrase, i) => {
+                return _.ruleMatch({t: phrase}, [
+                    {
+                        t: /\*[^*]+\*/,
+                        returns: <span key={i}><strong>{
+                            _.get(_.regGroups(phrase, "\\*(?<phrase>[^\*]+)\\*"), "phrase")
+                        }</strong></span>},
+
+                    {returns: <span key={i}>{phrase}</span>}
+                ])
+            })
+            .value();
+
         return _.ruleMatch({
-            s: _.get(this, "state.status")
+            s: _.get(this, "state.status"),
+            ud: _.get(this, "props.userData")
         }, [
             {
                 s: "editando",
@@ -29,26 +47,19 @@ class InfoText extends Component {
                 )
             },
             {
+                "ud.permissions": _.partial(_.includes, _, "any"),
                 returns: (
                     <div>
                         <img className={"editbtn"} src="/edit.svg" onClick={this.editInfoText} alt={"edit"}/>
-                        <p><span>{
-                            _.chain(this)
-                                .get("props.infoTxt", "")
-                                .thru(txt => txt.match(/([^*]+|\*[^*]+\*)|\*/g))
-                                .map((phrase, i) => {
-                                    return _.ruleMatch({t: phrase}, [
-                                        {
-                                            t: /\*[^*]+\*/,
-                                            returns: <span key={i}><strong>{
-                                                _.get(_.regGroups(phrase, "\\*(?<phrase>[^\*]+)\\*"), "phrase")
-                                            }</strong></span>},
+                        <p><span>{infotext}</span></p>
+                    </div>
+                )
+            },
 
-                                        {returns: <span key={i}>{phrase}</span>}
-                                    ])
-                                })
-                                .value()
-                        }</span></p>
+            {
+                returns: (
+                    <div>
+                        <p><span>{infotext}</span></p>
                     </div>
                 )
             }
@@ -81,4 +92,8 @@ class InfoText extends Component {
     }
 }
 
-export default InfoText;
+function mapState(state) {
+    return state;
+}
+
+export default connect(mapState)(InfoText);
