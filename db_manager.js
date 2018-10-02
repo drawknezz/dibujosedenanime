@@ -491,6 +491,29 @@ const voteEntryPoll = function(entryid, pollid, userid) {
     })
 };
 
+const deletePollEntry = function(entryid, pollid) {
+    return new Promise((res, rej) => {
+        getDB().then(db => {
+            db.deleteMany({
+                type: "entryvote",
+                votepoll: mongodb.ObjectID(pollid),
+                entry: mongodb.ObjectID(entryid)
+            }, (err, docs) => {
+                db.deleteOne({
+                        type: "pollentry",
+                        _id: mongodb.ObjectID(entryid),
+                        poll: mongodb.ObjectID(pollid),
+                    },
+                    (err, docs) => {
+                        if (err) rej(err);
+
+                        res(`entrada eliminada...`);
+                    })
+            })
+        });
+    })
+};
+
 const deletePoll = function(pollId) {
     return new Promise((res, rej) => {
         getDB().then(db => {
@@ -677,5 +700,6 @@ module.exports = {
     getPollById,
     createPollEntry,
     voteEntryPoll,
+    deletePollEntry,
     test: test
 };

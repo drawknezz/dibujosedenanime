@@ -13,7 +13,7 @@ class Poll extends React.Component {
             status: "loaded"
         };
 
-        _.bindAll(this, "createEntry", "creatingEntry", "deletePoll", "voteEntry", "resetState")
+        _.bindAll(this, "createEntry", "creatingEntry", "deletePoll", "voteEntry", "deleteEntry", "checkInput", "resetState")
     }
 
     render() {
@@ -21,29 +21,31 @@ class Poll extends React.Component {
         const higherVotes = _.chain(entries).map("votes.length").sortBy(a => a).last().dflt(1).value();
         const isAdmin = _.includes(_.get(this, "props.userData.permissions"), "any");
 
+        const entriesdom = _.chain(entries)
+            .map(entry => <div className="entry" key={_.get(entry, "_id")}>
+                <span className="entryname"><strong>{_.get(entry, "name")}</strong></span>
+                <div className="meter">
+                    <span style={{width: `${_.get(entry, "votes.length", 1) * 100 / higherVotes}%`}}/>
+                </div>
+                <div className="entrybtns">
+                    <a onClick={this.voteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>👍</a>&nbsp;
+                    {isAdmin && <a onClick={this.deleteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>⛔</a>}
+                </div>
+
+            </div>)
+            .value();
+
         return _.ruleMatch({st: _.get(this, "state.status")}, [
             {
                 st: "addingentry",
                 returns: (
                     <div className="poll">
                         <p><span>{_.get(this, "props.poll.name", "unnamed")}</span></p>
-                        <div className="entries">
-                            {
-                                _.chain(entries)
-                                    .map(entry => <div className="entry" key={_.get(entry, "_id")}>{
-                                        <span>
-                                            <strong>{_.get(entry, "name")}</strong>&nbsp;&nbsp;&nbsp;
-                                            {_.get(entry, "votes.length")} votos&nbsp;
-                                            <a onClick={this.voteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>votar</a>
-                                        </span>
-                                    }</div>)
-                                    .value()
-                            }
-                        </div>
+                        <div className="entries">{entriesdom}</div>
                         <p>
                         <span>
-                            <input type="text" ref="nametxt"/>
-                            <button onClick={this.createEntry}>aceptar</button>
+                            <input type="text" ref="nametxt" onChange={this.checkInput}/>
+                            <button onClick={this.createEntry} disabled={_.get(this, "state.invalidInput", true)}>aceptar</button>
                             <button onClick={this.resetState}>cancelar</button>
                         </span>
                         </p>
@@ -54,19 +56,7 @@ class Poll extends React.Component {
                 returns: (
                     <div className="poll">
                         <p><span>{_.get(this, "props.poll.name", "unnamed")}</span></p>
-                        <div className="entries">
-                            {
-                                _.chain(entries)
-                                    .map(entry => <div className="entry" key={_.get(entry, "_id")}>
-                                        <span className="entryname"><strong>{_.get(entry, "name")}</strong></span>
-                                        <div className="meter">
-                                            <span style={{width: `${_.get(entry, "votes.length", 1) * 100 / higherVotes}%`}}/>
-                                        </div>
-                                        <a className="entrybtns" onClick={this.voteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>votar</a>
-                                    </div>)
-                                    .value()
-                            }
-                        </div>
+                        <div className="entries">{entriesdom}</div>
                         <p>
                         <span>
                             <button onClick={this.creatingEntry}>agregar opcion</button>
@@ -82,6 +72,11 @@ class Poll extends React.Component {
     creatingEntry() {
         console.log("creating entry :0");
         this.setState({status: "addingentry"});
+    }
+
+    checkInput() {
+        let name = _.get(this, "refs.nametxt.value");
+        this.setState({invalidInput: _.isEmpty(name)})
     }
 
     createEntry() {
@@ -101,6 +96,16 @@ class Poll extends React.Component {
             if(!userid) _.attemptBound(this, "props.login");
 
             socketEmit("voteentry", {entryid: entryid, pollid: pollid, userid: userid});
+        }.bind(this);
+    }
+
+    deleteEntry(entryid, pollid) {
+        return function() {
+            const userid = _.get(this, "props.userData.id");
+
+            if(!userid) _.attemptBound(this, "props.login");
+
+            socketEmit("deleteentry", {entryid: entryid, pollid: pollid, userid: userid});
         }.bind(this);
     }
 

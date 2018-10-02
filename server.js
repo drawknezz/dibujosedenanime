@@ -379,6 +379,12 @@ const votePollEntry = function (entryid, pollid, userid) {
     return db.voteEntryPoll(entryid, pollid, userid);
 };
 
+const deletePollEntry = function (entryid, pollid, userid) {
+    return testForPermissions(userid, "deleteentry").then(() => {
+        return db.deletePollEntry(entryid, pollid, userid);
+    });
+};
+
 const getAllData = function () {
     return db.getLastReto().then(reto => {
         return Promise.props({
@@ -626,6 +632,16 @@ io.on("connection", function (socket) {
 
     socket.on("voteentry", ({entryid, pollid, userid}) => {
         votePollEntry(entryid, pollid, userid).then(resp => {
+            updateAllClients();
+            socket.emit("msg", resp);
+        }).catch(err => {
+            console.log("ERROR: ", err);
+            socket.emit("err", err);
+        });
+    });
+
+    socket.on("deleteentry", ({entryid, pollid, userid}) => {
+        deletePollEntry(entryid, pollid, userid).then(resp => {
             updateAllClients();
             socket.emit("msg", resp);
         }).catch(err => {

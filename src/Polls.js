@@ -13,7 +13,7 @@ class Polls extends React.Component {
             status: "loaded"
         };
 
-        _.bindAll(this, "resetState", "createPoll", "creatingPoll")
+        _.bindAll(this, "resetState", "createPoll", "creatingPoll", "checkInput")
     }
 
     render() {
@@ -57,8 +57,8 @@ class Polls extends React.Component {
                 returns: <div className="pollscontents">
                     <div key="pollscontroles">
                         <p><span>
-                            <input type="text" ref="pollnametxt"/>
-                            <button onClick={this.createPoll}>crear nueva votacion</button>
+                            <input type="text" ref="pollnametxt" onChange={this.checkInput}/>
+                            <button onClick={this.createPoll} disabled={_.get(this, "state.invalidInput", true)}>crear nueva votacion</button>
                         </span></p>
                         <div className="pollslist">{
                             _.chain(this).get("props.polls").map(poll => {
@@ -79,10 +79,14 @@ class Polls extends React.Component {
         this.setState({status: "creandopoll"});
     }
 
+    checkInput() {
+        let name = _.get(this, "refs.pollnametxt.value");
+        this.setState({invalidInput: _.isEmpty(name)})
+    }
+
     createPoll() {
         const pollname = _.get(this, "refs.pollnametxt.value");
         const userid = _.get(this, "props.userData.id");
-
 
         socketEmit("createpoll", {name: pollname, userid: userid});
 
