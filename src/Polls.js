@@ -62,7 +62,8 @@ class Polls extends React.Component {
                         </span></p>
                         <div className="pollslist">{
                             _.chain(this).get("props.polls").map(poll => {
-                                return <Poll key={_.get(poll, "_id")} poll={poll}/>
+                                return <Poll key={_.get(poll, "_id")} poll={poll}
+                                             loginData={_.get(this, "props.loginData")}/>
                             }).value()
                         }</div>
                     </div>
