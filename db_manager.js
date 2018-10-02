@@ -455,7 +455,6 @@ const ensureUserHasNotVotedOnPoll = function(pollid, userid) {
             });
         })
     })
-
 };
 
 const voteEntryPoll = function(entryid, pollid, userid) {

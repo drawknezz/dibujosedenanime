@@ -92,11 +92,10 @@ class Login extends Component {
 
     promoting() {
         this.setState({status: "promoting"});
-        this.props.promote()
     }
 
     promote() {
-        const userid = _.get(this, "props.loginData.authResponse.userID");
+        const userid = _.get(this, "props.userData.id");
         const pass = _.get(this, "refs.passtxt.value");
 
         socketEmit("promotemember", {id: userid, pass: pass});
