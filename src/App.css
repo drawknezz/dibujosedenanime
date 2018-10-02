@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css?family=Indie+Flower|Josefin+Sans|Quicksand');
 @import 'Members.css';
 @import "Sorteo.css";
+@import "Polls.css";
 
 * {
     box-sizing: border-box;
@@ -99,6 +100,10 @@ body {
     width: 10px;
     position: relative;
     top: 1px;
+}
+
+.loginBlock input[type="password"] {
+    font-size: 12px;
 }
 
 main {

@@ -4,10 +4,10 @@ import _ from './mixins';
 import Sorteo from './Sorteo';
 import Reto from './Reto';
 import Chars from './Chars';
-import Members from './Members'
 import InfoText from './InfoText'
 import Login from './Login';
 import {onSocket, socketEmit} from "./api";
+import Polls from "./Polls";
 
 class App extends Component {
     constructor() {
@@ -38,7 +38,7 @@ class App extends Component {
             {
                 returns: (
                     <div>
-                        <Login onStatusChange={this.onLoginStatusChange} loginData={_.get(this, "state.loginData")}/>
+                        <Login onStatusChange={this.onLoginStatusChange} loginData={_.get(this, "state.loginData")} userData={_.get(this, "state.userData")}/>
 
                         <header>
                             <h1 data-testid="pagetitle">
@@ -59,6 +59,10 @@ class App extends Component {
                         <main>
                             <div className="bloque pad">
                                 <InfoText infoTxt={_.get(this, "state.infoTxt.txt")}/>
+                            </div>
+
+                            <div className="bloque pad">
+                                <Polls polls={_.get(this, "state.polls")} loginData={_.get(this, "state.loginData")}/>
                             </div>
 
                             <div className="bloque">
@@ -89,7 +93,7 @@ class App extends Component {
                             {
                                 returns: "uwu"
                             }
-                        ])
+                        ], null, null, {log: true})
                     }</span>
                         </footer>
                     </div>
@@ -106,7 +110,8 @@ class App extends Component {
             sorteo: _.get(data, "sorteo"),
             weekNum: _.get(data, "weekNum"),
             members: _.get(data, "members"),
-            chars: _.get(data, "chars")
+            chars: _.get(data, "chars"),
+            polls: _.get(data, "polls")
         })
     }
 
@@ -120,7 +125,7 @@ class App extends Component {
         this.setState({loginData: loginData});
 
         if (_.get(loginData, "username")) {
-            socketEmit("createuser", {
+            socketEmit("userlogged", {
                 name: _.get(loginData, "username"),
                 facebookId: _.get(loginData, "authResponse.userID")
             });
@@ -136,6 +141,10 @@ class App extends Component {
             this.setState({status: "loaded"});
 
             this.updateAll(data);
+        });
+
+        onSocket("userdata", userData => {
+            this.setState({userData: userData});
         });
 
         onSocket("msg", this.showMessage);

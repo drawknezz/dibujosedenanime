@@ -12,7 +12,12 @@
     "react-addons-css-transition-group": "^15.6.2",
     "react-css-transition-replace": "^3.0.3",
     "react-dom": "^16.5.0",
+    "react-redux": "^5.0.7",
     "react-scripts": "1.1.5",
+    "redux": "^4.0.0",
+    "redux-observable": "^1.0.0",
+    "rxjs": "^6.3.3",
+    "rxjs-compat": "^6.3.3",
     "socket.io": "^2.1.1",
     "socket.io-client": "^2.1.1"
   },

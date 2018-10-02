@@ -20,6 +20,11 @@ if (process.env.NODE_ENV === 'local') {
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'build')));
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
 
 const _ = require("./mixins");
 const Promise = require("bluebird");
@@ -31,6 +36,14 @@ process.on("unhandledRejection", handleError);
 
 app.get("/", function (request, response) {
     response.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+
+app.get("/getUserPermission", function(request, response) {
+    const user = _.get(request, "query.userid");
+    console.log("getting permissions for user id: ", user);
+    db.getUserById(user).then(userdata => {
+        response.send(_.get(userdata, "permissions"));
+    })
 });
 
 const validatePass = function (pass) {
@@ -310,14 +323,60 @@ const updateInfoText = function (txt, pass) {
     });
 };
 
-const createUser = function(name, fid) {
+const createUser = function (name, fid) {
     return db.createUser(name, fid);
 };
 
 const promoteMember = function (memberid, pass) {
     return validatePass(pass).then(() => {
-        return db.assignPermissionsToMember(id, ["any"]);
+        return db.assignPermissionsToMember(memberid, ["any"]);
     });
+};
+
+const testForPermissions = function (userId, permissions) {
+    return new Promise((res, rej) => {
+        return db.getUserById(userId).then(user => {
+            let userpermissions = _.get(user, "permissions");
+
+            if (_.includes(userpermissions, "any") || _.chain(permissions).ensureArray().difference(userpermissions).isEmpty().value()) {
+                res(`${_.get(user, "name", "hmm")}, tienes permisos para eso uwu...`)
+            } else {
+                rej(`${_.get(user, "name", "hmm")}, no tienes permisos para eso...`);
+            }
+        })
+    })
+};
+
+const createPoll = function (name, userId) {
+    return new Promise((res, rej) => {
+        return testForPermissions(userId, "createpoll").then(() => {
+            return db.createPoll(name).then(() => {
+                res("votacion creada con exito")
+            })
+        }).catch(err => rej(err));
+    });
+};
+
+const deletePoll = function (pollId, userId) {
+    return new Promise((res, rej) => {
+        return testForPermissions(userId, "deletepoll").then(() => {
+            return db.deletePoll(pollId).then(() => {
+                res("votacion eliminada con exito")
+            })
+        }).catch(err => rej(err));
+    });
+};
+
+const createPollEntry = function (name, pollid, userId) {
+    return new Promise((res, rej) => {
+        return db.createPollEntry(name, pollid).then(() => {
+            res("opcion creada con exito")
+        })
+    });
+};
+
+const votePollEntry = function (entryid, pollid, userid) {
+    return db.voteEntryPoll(entryid, pollid, userid);
 };
 
 const getAllData = function () {
@@ -327,7 +386,8 @@ const getAllData = function () {
             reto: reto,
             sorteo: db.getSorteoForReto(_.get(reto, "_id")),
             chars: db.getAllCharsForReto(_.get(reto, "_id")),
-            members: db.getAllMembersForReto(_.get(reto, "_id"))
+            members: db.getAllMembersForReto(_.get(reto, "_id")),
+            polls: db.getAllPolls()
         }).then(props => {
             let fullChars = _.chain(props.chars).map(c => {
                 let sorteoElement = _.find(_.get(props, "sorteo.values"), {char: _.get(c, "_id")});
@@ -369,7 +429,7 @@ io.on("connection", function (socket) {
         io.emit("usercount", connectedUsers);
     });
 
-    socket.on("createuser", ({name, facebookId}) => {
+    socket.on("userlogged", ({name, facebookId}) => {
         //la unica forma de que se llame esto es que el usuario se haya logueado en este cliente
         connectedUsers = _.chain(connectedUsers)
             .map(c => _.get(c, "clientid") === _.get(socket, "client.id") ? _.extend({}, c, {
@@ -379,8 +439,13 @@ io.on("connection", function (socket) {
 
         createUser(name, facebookId).then(resp => {
             console.log(resp);
+
+            db.getUserById(facebookId).then(user => {
+                socket.emit("userdata", user);
+            })
+
         }).catch(err => {
-            console.log("ERROR: ", err);
+            console.log("userlogged/ERROR: ", err);
         });
     });
 
@@ -527,7 +592,47 @@ io.on("connection", function (socket) {
             console.log("ERROR: ", err);
             socket.emit("err", err);
         });
-    })
+    });
+
+    socket.on("createpoll", ({name, userid}) => {
+        createPoll(name, userid).then(resp => {
+            updateAllClients();
+            socket.emit("msg", resp);
+        }).catch(err => {
+            console.log("ERROR: ", err);
+            socket.emit("err", err);
+        });
+    });
+
+    socket.on("deletepoll", ({pollid, userid}) => {
+        deletePoll(pollid, userid).then(resp => {
+            updateAllClients();
+            socket.emit("msg", resp);
+        }).catch(err => {
+            console.log("ERROR: ", err);
+            socket.emit("err", err);
+        });
+    });
+
+    socket.on("createpollentry", ({name, pollid, userid}) => {
+        createPollEntry(name, pollid, userid).then(resp => {
+            updateAllClients();
+            socket.emit("msg", resp);
+        }).catch(err => {
+            console.log("ERROR: ", err);
+            socket.emit("err", err);
+        });
+    });
+
+    socket.on("voteentry", ({entryid, pollid, userid}) => {
+        votePollEntry(entryid, pollid, userid).then(resp => {
+            updateAllClients();
+            socket.emit("msg", resp);
+        }).catch(err => {
+            console.log("ERROR: ", err);
+            socket.emit("err", err);
+        });
+    });
 });
 
 // listen for requests :)
