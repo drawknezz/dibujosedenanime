@@ -20,6 +20,7 @@ class Login extends Component {
     render() {
         let loginData = _.get(this, "props.loginData", {});
         return _.ruleMatch(_.extend({}, loginData, {
+            st: _.get(this, "state.status"),
             ud: _.get(this, "props.userData")
         }), [
             {
@@ -29,7 +30,7 @@ class Login extends Component {
                         status: "connected",
                         $inner: [
                             {
-                                "ud.status": "promoting",
+                                "st": "promoting",
                                 returns: (<div className={"loginBlock"}>
                                     <p><span>
                                         <img src="/facebook.svg" alt=""/>&nbsp;

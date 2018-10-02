@@ -22,6 +22,7 @@ class App extends Component {
 
     render() {
         let usercount = _.get(this, "state.usercount", []);
+        console.log("usercount: ", usercount);
         return _.ruleMatch({s: _.get(this, "state.status")}, [
             {
                 s: "loading",
