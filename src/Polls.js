@@ -3,6 +3,7 @@ import _ from './mixins';
 import {socketEmit} from './api';
 import ReactCSSReplace from 'react-css-transition-replace';
 import Poll from "./Poll";
+import {connect} from 'react-redux';
 
 class Polls extends React.Component {
     constructor() {
@@ -17,17 +18,35 @@ class Polls extends React.Component {
 
     render() {
         let status = this.state.status;
+        let isAdmin = _.includes(_.get(this, "props.userData.permissions"), "any");
 
-        return _.ruleMatch({s: status, polls: _.get(this, "props.polls")}, [
+        return _.ruleMatch({
+            s: status,
+            ud: _.get(this, "props.userData"),
+            admin: isAdmin,
+            polls: _.get(this, "props.polls")
+        }, [
+            {
+                polls: _.isEmpty,
+                admin: _.negate(Boolean),
+                returns: <div className="pollscontents">
+                    <p><span>
+                        nadie ha creado votaciones todavia...
+                    </span></p>
+                </div>
+            },
+
             {
                 s: "loaded",
-                polls: _.negate(_.isEmpty),
                 returns: <div className="pollscontents">
+                    <p><h4>votaciones (beta)</h4></p>
                     <div key="pollscontroles">
-                        <p><span><button onClick={this.creatingPoll}>crear nueva votacion</button></span></p>
+                        {isAdmin && <p><span><button onClick={this.creatingPoll}>crear nueva votacion</button></span>
+                        </p>}
                         <div className="pollslist">{
                             _.chain(this).get("props.polls").map(poll => {
-                                return <Poll key={_.get(poll, "_id")} poll={poll} loginData={_.get(this, "props.loginData")}/>
+                                return <Poll key={_.get(poll, "_id")} poll={poll}
+                                             loginData={_.get(this, "props.loginData")}/>
                             }).value()
                         }</div>
                     </div>
@@ -35,7 +54,6 @@ class Polls extends React.Component {
             },
             {
                 s: "creandopoll",
-                polls: _.negate(_.isEmpty),
                 returns: <div className="pollscontents">
                     <div key="pollscontroles">
                         <p><span>
@@ -52,7 +70,7 @@ class Polls extends React.Component {
             },
             {
                 returns: <div className="pollscontents">...</div>,
-            },
+            }
         ]);
     }
 
@@ -60,9 +78,10 @@ class Polls extends React.Component {
         this.setState({status: "creandopoll"});
     }
 
-    createPoll(){
+    createPoll() {
         const pollname = _.get(this, "refs.pollnametxt.value");
-        const userid = _.get(this, "props.loginData.authResponse.userID");
+        const userid = _.get(this, "props.userData.id");
+
 
         socketEmit("createpoll", {name: pollname, userid: userid});
 
@@ -74,4 +93,4 @@ class Polls extends React.Component {
     }
 }
 
-export default Polls;
+export default connect((state) => state)(Polls);

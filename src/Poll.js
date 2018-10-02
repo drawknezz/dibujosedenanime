@@ -2,6 +2,8 @@ import React from 'react';
 import _ from './mixins';
 import {socketEmit} from './api';
 import ReactCSSReplace from 'react-css-transition-replace';
+import {connect} from 'react-redux';
+import {login} from "./actions/index";
 
 class Poll extends React.Component {
     constructor() {
@@ -17,6 +19,7 @@ class Poll extends React.Component {
     render() {
         const entries = _.chain(this).get("props.poll.entries").sortBy(a => -_.get(a, "votes.length", 0)).value();
         const higherVotes = _.chain(entries).map("votes.length").sortBy(a => a).last().dflt(1).value();
+        const isAdmin = _.includes(_.get(this, "props.userData.permissions"), "any");
 
         return _.ruleMatch({st: _.get(this, "state.status")}, [
             {
@@ -67,7 +70,7 @@ class Poll extends React.Component {
                         <p>
                         <span>
                             <button onClick={this.creatingEntry}>agregar opcion</button>
-                            <button onClick={this.deletePoll}>eliminar votacion</button>
+                            {isAdmin && <button onClick={this.deletePoll}>eliminar votacion</button>}
                         </span>
                         </p>
                     </div>
@@ -82,7 +85,7 @@ class Poll extends React.Component {
     }
 
     createEntry() {
-        const userid = _.get(this, "props.loginData.authResponse.userID");
+        const userid = _.get(this, "props.userData.id");
         const pollid = _.get(this, "props.poll._id");
         const name = _.get(this, "refs.nametxt.value");
 
@@ -92,14 +95,19 @@ class Poll extends React.Component {
     }
 
     voteEntry(entryid, pollid) {
-        return () => {
-            const userid = _.get(this, "props.loginData.authResponse.userID");
+        return function() {
+            const userid = _.get(this, "props.userData.id");
+
+            if(!userid) _.attemptBound(this, "props.login");
+
             socketEmit("voteentry", {entryid: entryid, pollid: pollid, userid: userid});
-        }
+        }.bind(this);
     }
 
     deletePoll() {
-        console.log("deleting")
+        const userid = _.get(this, "props.userData.id");
+        const pollid = _.get(this, "props.poll._id");
+        socketEmit("deletepoll", {pollid: pollid, userid: userid});
     }
 
     resetState() {
@@ -107,4 +115,4 @@ class Poll extends React.Component {
     }
 }
 
-export default Poll;
+export default connect(state => state, dispatch => ({login: () => dispatch(login())}))(Poll);

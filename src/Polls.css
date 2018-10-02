@@ -9,6 +9,10 @@
     margin: 0;
 }
 
+.entries {
+    margin: 10px 0;
+}
+
 .entry {
     font-size: 12px;
     display: flex;

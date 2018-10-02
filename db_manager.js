@@ -6,7 +6,7 @@ let uri = "mongodb://dibujosadmin:memosupremo3@ds255797.mlab.com:55797/heroku_3l
 
 let collectionName = process.env.NODE_ENV === "local" ? "dibujoslocal" : "dibujos";
 
-const getDB = (function () {
+const getDB = (function() {
     let dbpromise = new Promise((res, rej) => {
         console.log("connecting to the DB...", new Date());
         return mongodb.MongoClient.connect(uri, {useNewUrlParser: true}).then(client => {
@@ -18,13 +18,13 @@ const getDB = (function () {
         }).catch(err => rej(err));
     });
 
-    return function () {
+    return function() {
         return dbpromise;
     }
 })();
 
-const setSorteoForReto = function (retoId, sorteoArr) {
-    return new Promise(function (res, rej) {
+const setSorteoForReto = function(retoId, sorteoArr) {
+    return new Promise(function(res, rej) {
         console.log("sorting for reto " + retoId);
 
         getDB().then(db => {
@@ -41,7 +41,7 @@ const setSorteoForReto = function (retoId, sorteoArr) {
                     db.updateOne({
                         reto: mongodb.ObjectID(retoId),
                         type: "sorteo"
-                    }, {$set: {values: sorteoArr}}, function (err, numReplaced) {
+                    }, {$set: {values: sorteoArr}}, function(err, numReplaced) {
                         console.log(_.get(numReplaced, "matchedCount") + " docs updated for sort");
                     });
                     res("datos actualizados");
@@ -51,8 +51,8 @@ const setSorteoForReto = function (retoId, sorteoArr) {
     });
 };
 
-const getSorteoForReto = function (retoId) {
-    return new Promise(function (res, rej) {
+const getSorteoForReto = function(retoId) {
+    return new Promise(function(res, rej) {
         getDB().then(db => {
             db.findOne({reto: mongodb.ObjectID(retoId), type: "sorteo"}, (err, docs) => {
                 if (err) rej(err);
@@ -63,8 +63,8 @@ const getSorteoForReto = function (retoId) {
     });
 };
 
-const getAllCharsForReto = function (retoId) {
-    return new Promise(function (res, rej) {
+const getAllCharsForReto = function(retoId) {
+    return new Promise(function(res, rej) {
         getDB().then(db => {
             db.find({
                 reto: mongodb.ObjectID(retoId),
@@ -77,8 +77,8 @@ const getAllCharsForReto = function (retoId) {
     });
 };
 
-const getAllMembersForReto = function (retoId) {
-    return new Promise(function (res, rej) {
+const getAllMembersForReto = function(retoId) {
+    return new Promise(function(res, rej) {
         getDB().then(db => {
             db.find({
                 type: "member",
@@ -91,8 +91,8 @@ const getAllMembersForReto = function (retoId) {
     });
 };
 
-const createMember = function (name, retoId) {
-    return new Promise(function (res, rej) {
+const createMember = function(name, retoId) {
+    return new Promise(function(res, rej) {
         getDB().then(db => {
             db.find({
                 type: "member",
@@ -119,8 +119,8 @@ const createMember = function (name, retoId) {
     });
 };
 
-const deleteMember = function (id) {
-    return new Promise(function (res, rej) {
+const deleteMember = function(id) {
+    return new Promise(function(res, rej) {
         getDB().then(db => {
             db.deleteOne({
                 "type": "member",
@@ -136,8 +136,8 @@ const deleteMember = function (id) {
     });
 };
 
-const deleteChar = function (id) {
-    return new Promise(function (res, rej) {
+const deleteChar = function(id) {
+    return new Promise(function(res, rej) {
         getDB().then(db => {
             db.deleteOne(
                 {_id: mongodb.ObjectID(id), type: "char"}, (err, docs) => {
@@ -148,8 +148,8 @@ const deleteChar = function (id) {
     });
 };
 
-const getCharById = function (id) {
-    return new Promise(function (res, rej) {
+const getCharById = function(id) {
+    return new Promise(function(res, rej) {
         getDB().then(db => {
             db.find({
                 type: "char",
@@ -162,8 +162,8 @@ const getCharById = function (id) {
     });
 };
 
-const getMemberById = function (id) {
-    return new Promise(function (res, rej) {
+const getMemberById = function(id) {
+    return new Promise(function(res, rej) {
         getDB().then(db => {
             db.find({
                 type: "member",
@@ -176,8 +176,8 @@ const getMemberById = function (id) {
     });
 };
 
-const assignPermissionsToUser = function (userid, permissions) {
-    return new Promise(function (res, rej) {
+const assignPermissionsToUser = function(userid, permissions) {
+    return new Promise(function(res, rej) {
         getDB().then(db => {
             getUserById(userid).then(user => {
                 db.updateOne({
@@ -197,8 +197,8 @@ const assignPermissionsToUser = function (userid, permissions) {
     });
 };
 
-const createChar = function (name, serie, retoId) {
-    return new Promise(function (res, rej) {
+const createChar = function(name, serie, retoId) {
+    return new Promise(function(res, rej) {
         getDB().then(db => {
             db.find({
                 type: "char",
@@ -227,7 +227,7 @@ const createChar = function (name, serie, retoId) {
     });
 };
 
-const createReto = function (name) {
+const createReto = function(name) {
     return new Promise((res, rej) => {
         debugger;
         getDB().then(db => {
@@ -244,7 +244,7 @@ const createReto = function (name) {
     })
 };
 
-const getReto = function (id) {
+const getReto = function(id) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.find({
@@ -258,7 +258,7 @@ const getReto = function (id) {
     })
 };
 
-const deleteReto = function (id) {
+const deleteReto = function(id) {
     return new Promise((res, rej) => {
         return getReto(id).then(reto => {
             return Promise.props({
@@ -305,7 +305,7 @@ const deleteReto = function (id) {
     })
 };
 
-const getLastReto = function () {
+const getLastReto = function() {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.find({type: "reto"}).toArray((err, docs) => {
@@ -317,7 +317,7 @@ const getLastReto = function () {
     })
 };
 
-const getInfoTxt = function () {
+const getInfoTxt = function() {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.findOne({type: "info"}, (err, docs) => {
@@ -328,7 +328,7 @@ const getInfoTxt = function () {
     })
 };
 
-const setInfoTxt = function (txt) {
+const setInfoTxt = function(txt) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.find({type: "info"}).toArray((err, docs) => {
@@ -350,7 +350,7 @@ const setInfoTxt = function (txt) {
     })
 };
 
-const createUser = function (name, fid) {
+const createUser = function(name, fid) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.find({type: "user", fid: fid}).toArray((err, docs) => {
@@ -377,7 +377,7 @@ const createUser = function (name, fid) {
     })
 };
 
-const getUserById = function (fid) {
+const getUserById = function(fid) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.findOne({type: "user", fid: fid}, (err, docs) => {
@@ -388,7 +388,7 @@ const getUserById = function (fid) {
     })
 };
 
-const getEntryById = function (entryid) {
+const getEntryById = function(entryid) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.findOne({type: "pollentry", _id: mongodb.ObjectID(entryid)}, (err, docs) => {
@@ -399,7 +399,7 @@ const getEntryById = function (entryid) {
     })
 };
 
-const createPoll = function (name) {
+const createPoll = function(name) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.find({type: "poll", name: name}).toArray((err, docs) => {
@@ -421,7 +421,7 @@ const createPoll = function (name) {
     })
 };
 
-const createPollEntry = function (name, pollid) {
+const createPollEntry = function(name, pollid) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             getPollById(pollid).then(poll => {
@@ -439,7 +439,7 @@ const createPollEntry = function (name, pollid) {
     });
 };
 
-const ensureUserHasNotVotedOnPoll = function (pollid, userid) {
+const ensureUserHasNotVotedOnPoll = function(pollid, userid) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.find({
@@ -458,12 +458,19 @@ const ensureUserHasNotVotedOnPoll = function (pollid, userid) {
 
 };
 
-const voteEntryPoll = function (entryid, pollid, userid) {
+const voteEntryPoll = function(entryid, pollid, userid) {
     return new Promise((res, rej) => {
-        ensureUserHasNotVotedOnPoll(pollid, userid).then(() => {
-            getDB().then(db => {
-                getEntryById(entryid).then(entry => {
-                    if (entry) {
+        getDB().then(db => {
+            getEntryById(entryid).then(entry => {
+                if (entry) {
+
+                    db.deleteMany({
+                        type: "entryvote",
+                        votepoll: mongodb.ObjectID(pollid),
+                        user: {$in: [userid, null]}
+                    }, (err, docs) => {
+                        if (!userid) rej("debes estar logueado para votar...");
+
                         db.insertOne({
                                 type: "entryvote",
                                 entry: mongodb.ObjectID(entryid),
@@ -475,17 +482,54 @@ const voteEntryPoll = function (entryid, pollid, userid) {
 
                                 res(`votaste por ${_.get(entry, "name")}...`);
                             })
-                    } else {
-                        rej("opcion inexistente :0")
-                    }
-                });
+                    })
+                } else {
+                    rej("opcion inexistente :0")
+                }
             });
-        }).catch(err => rej(err));
+        });
     })
 };
 
-const deletePoll = function (pollId) {
+const deletePoll = function(pollId) {
     return new Promise((res, rej) => {
+        getDB().then(db => {
+            db.aggregate([
+                {
+                    $match: {
+                        type: "poll",
+                        _id: mongodb.ObjectID(pollId)
+                    }
+                },
+                {
+                    $lookup: {
+                        from: collectionName,
+                        let: {pollid: "$_id"},
+                        pipeline: [
+                            {$match: {$expr: {$and: [{$eq: ["$type", "pollentry"]}, {$eq: ["$poll", "$$pollid"]}]}}},
+                            {
+                                $lookup: {
+                                    from: collectionName,
+                                    localField: "_id",
+                                    foreignField: "entry",
+                                    as: "votes"
+                                }
+                            }
+                        ],
+                        as: "entries"
+                    }
+                }
+            ]).toArray((err, docs) => {
+                const pollids = _.map(docs, "_id");
+                const entryIds = _.chain(docs).map("entries").flatten().map("_id").value();
+                const votesIds = _.chain(docs).map("entries").flatten().map("votes").flatten().map("_id").value();
+
+                db.deleteMany({$id: {$in: _.union(pollids, entryIds, votesIds)}})
+
+            });
+        });
+
+
         getDB().then(db => {
             db.deleteOne({
                 "type": "poll",
@@ -495,13 +539,13 @@ const deletePoll = function (pollId) {
 
                 console.log(err);
 
-                res("votacion " + id + " eliminada")
+                res("votacion eliminada")
             });
         })
     })
 };
 
-const getPollById = function (pollid) {
+const getPollById = function(pollid) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.findOne({
@@ -510,15 +554,13 @@ const getPollById = function (pollid) {
             }, (err, docs) => {
                 if (err) rej("error al consultar por la votacion...");
 
-                console.log("ERROR: ", err);
-
                 res(docs)
             });
         })
     })
 };
 
-const getPollByName = function (name) {
+const getPollByName = function(name) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.findOne({
@@ -527,15 +569,13 @@ const getPollByName = function (name) {
             }, (err, docs) => {
                 if (err) rej("error al consultar por la votacion...");
 
-                console.log("ERROR: ", err);
-
                 res(docs)
             });
         })
     })
 };
 
-const getAllPolls = function () {
+const getAllPolls = function() {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.aggregate([
@@ -549,7 +589,7 @@ const getAllPolls = function () {
                         from: collectionName,
                         let: {pollid: "$_id"},
                         pipeline: [
-                            {$match: { $expr: {$and: [{$eq: ["$type", "pollentry"]}, {$eq: ["$poll", "$$pollid"]}]}}},
+                            {$match: {$expr: {$and: [{$eq: ["$type", "pollentry"]}, {$eq: ["$poll", "$$pollid"]}]}}},
                             {
                                 $lookup: {
                                     from: collectionName,
@@ -571,12 +611,13 @@ const getAllPolls = function () {
 };
 
 
-const test = function () {
+const test = function() {
     getDB().then(db => {
-        db.aggregate([
+        let cursor = db.aggregate([
             {
                 $match: {
-                    type: "poll"
+                    type: "poll",
+                    _id: mongodb.ObjectID("5bac1f1857a01b1e104831d1")
                 }
             },
             {
@@ -584,7 +625,7 @@ const test = function () {
                     from: collectionName,
                     let: {pollid: "$_id"},
                     pipeline: [
-                        {$match: { $expr: {$and: [{$eq: ["$type", "pollentry"]}, {$eq: ["$poll", "$$pollid"]}]}}},
+                        {$match: {$expr: {$and: [{$eq: ["$type", "pollentry"]}, {$eq: ["$poll", "$$pollid"]}]}}},
                         {
                             $lookup: {
                                 from: collectionName,
@@ -597,9 +638,15 @@ const test = function () {
                     as: "entries"
                 }
             }
-        ]).toArray((err, docs) => {
-            if (err) console.log("getAllPolls/ERROR: ", err);
-            console.log(docs)
+        ]);
+
+        let result = cursor.toArray((err, docs) => {
+            const pollids = _.map(docs, "_id");
+            const entryIds = _.chain(docs).map("entries").flatten().map("_id").value();
+            const votesIds = _.chain(docs).map("entries").flatten().map("votes").flatten().map("_id").value();
+
+            console.log(_.union(pollids, entryIds, votesIds));
+
         });
     })
 };

@@ -357,6 +357,16 @@ const createPoll = function (name, userId) {
     });
 };
 
+const deletePoll = function (pollId, userId) {
+    return new Promise((res, rej) => {
+        return testForPermissions(userId, "deletepoll").then(() => {
+            return db.deletePoll(pollId).then(() => {
+                res("votacion eliminada con exito")
+            })
+        }).catch(err => rej(err));
+    });
+};
+
 const createPollEntry = function (name, pollid, userId) {
     return new Promise((res, rej) => {
         return db.createPollEntry(name, pollid).then(() => {
@@ -586,6 +596,16 @@ io.on("connection", function (socket) {
 
     socket.on("createpoll", ({name, userid}) => {
         createPoll(name, userid).then(resp => {
+            updateAllClients();
+            socket.emit("msg", resp);
+        }).catch(err => {
+            console.log("ERROR: ", err);
+            socket.emit("err", err);
+        });
+    });
+
+    socket.on("deletepoll", ({pollid, userid}) => {
+        deletePoll(pollid, userid).then(resp => {
             updateAllClients();
             socket.emit("msg", resp);
         }).catch(err => {
