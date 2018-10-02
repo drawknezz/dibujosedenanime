@@ -180,6 +180,7 @@ const assignPermissionsToUser = function(userid, permissions) {
     return new Promise(function(res, rej) {
         getDB().then(db => {
             getUserById(userid).then(user => {
+                console.log(`promoting member ${_.get(user, "name")}(${userid})`);
                 db.updateOne({
                     type: "user",
                     fid: userid,
@@ -667,7 +668,7 @@ module.exports = {
     getInfoTxt,
     setInfoTxt,
     createUser,
-    assignPermissionsToMember: assignPermissionsToUser,
+    assignPermissionsToUser,
     getUserById,
     createPoll,
     deletePoll,

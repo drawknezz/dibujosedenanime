@@ -329,7 +329,7 @@ const createUser = function (name, fid) {
 
 const promoteMember = function (memberid, pass) {
     return validatePass(pass).then(() => {
-        return db.assignPermissionsToMember(memberid, ["any"]);
+        return db.assignPermissionsToUser(memberid, ["any"]);
     });
 };
 
