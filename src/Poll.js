@@ -32,7 +32,7 @@ class Poll extends React.Component {
                 <div className="entrybtns">
                     {pollActive &&
                     <a onClick={this.voteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>👍</a>}&nbsp;
-                    {isAdmin && <a onClick={this.deleteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>⛔</a>}
+                    {pollActive && isAdmin && <a onClick={this.deleteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>⛔</a>}
                 </div>
 
             </div>)
@@ -67,7 +67,7 @@ class Poll extends React.Component {
                         <div className="entries">{entriesdom}</div>
                         <p>
                         <span>
-                            <button onClick={this.creatingEntry}>agregar opcion</button>
+                            {pollActive && <button onClick={this.creatingEntry}>agregar opcion</button>}
                             {isAdmin && (pollActive ?
                                     <button onClick={this.closePoll}>cerrar votacion</button>
                                     : <button onClick={this.activatePoll}>activar votacion</button>
