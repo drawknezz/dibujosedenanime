@@ -30,7 +30,8 @@ class Poll extends React.Component {
                     <span style={{width: `${_.get(entry, "votes.length", 1) * 100 / higherVotes}%`}}/>
                 </div>
                 <div className="entrybtns">
-                    {pollActive && <a onClick={this.voteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>👍</a>}&nbsp;
+                    {pollActive &&
+                    <a onClick={this.voteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>👍</a>}&nbsp;
                     {isAdmin && <a onClick={this.deleteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>⛔</a>}
                 </div>
 
@@ -43,13 +44,14 @@ class Poll extends React.Component {
                 returns: (
                     <div className="poll">
                         <p><span>{_.get(this, "props.poll.name", "unnamed")}
-                            {` (${totalVotes} ${_.gt(totalVotes, 1) ? "votos" : "voto"})`}
+                            {` (${totalVotes} ${_.gt(totalVotes, 1) || _.eq(totalVotes, 0) ? "votos" : "voto"})`}
                             {pollActive ? "" : " (cerrada)"}</span></p>
                         <div className="entries">{entriesdom}</div>
                         <p>
                         <span>
                             <input type="text" ref="nametxt" onChange={this.checkInput}/>
-                            <button onClick={this.createEntry} disabled={_.get(this, "state.invalidInput", true)}>aceptar</button>
+                            <button onClick={this.createEntry}
+                                    disabled={_.get(this, "state.invalidInput", true)}>aceptar</button>
                             <button onClick={this.resetState}>cancelar</button>
                         </span>
                         </p>
@@ -60,15 +62,15 @@ class Poll extends React.Component {
                 returns: (
                     <div className="poll">
                         <p><span>{_.get(this, "props.poll.name", "unnamed")}
-                        {` (${totalVotes} ${_.gt(totalVotes, 1) ? "votos" : "voto"})`}
-                        {pollActive ? "" : " (cerrada)"}</span></p>
+                            {` (${totalVotes} ${_.gt(totalVotes, 1) || _.eq(totalVotes, 0) ? "votos" : "voto"})`}
+                            {pollActive ? "" : " (cerrada)"}</span></p>
                         <div className="entries">{entriesdom}</div>
                         <p>
                         <span>
                             <button onClick={this.creatingEntry}>agregar opcion</button>
                             {isAdmin && (pollActive ?
-                                <button onClick={this.closePoll}>cerrar votacion</button>
-                                :<button onClick={this.activatePoll}>activar votacion</button>
+                                    <button onClick={this.closePoll}>cerrar votacion</button>
+                                    : <button onClick={this.activatePoll}>activar votacion</button>
                             )}
                             {isAdmin && <button onClick={this.deletePoll}>eliminar votacion</button>}
                         </span>
@@ -100,20 +102,20 @@ class Poll extends React.Component {
     }
 
     voteEntry(entryid, pollid) {
-        return function() {
+        return function () {
             const userid = _.get(this, "props.userData.id");
 
-            if(!userid) _.attemptBound(this, "props.login");
+            if (!userid) _.attemptBound(this, "props.login");
 
             socketEmit("voteentry", {entryid: entryid, pollid: pollid, userid: userid});
         }.bind(this);
     }
 
     deleteEntry(entryid, pollid) {
-        return function() {
+        return function () {
             const userid = _.get(this, "props.userData.id");
 
-            if(!userid) _.attemptBound(this, "props.login");
+            if (!userid) _.attemptBound(this, "props.login");
 
             socketEmit("deleteentry", {entryid: entryid, pollid: pollid, userid: userid});
         }.bind(this);
