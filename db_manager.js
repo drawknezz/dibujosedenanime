@@ -469,19 +469,22 @@ const voteEntryPoll = function(entryid, pollid, userid) {
                         votepoll: mongodb.ObjectID(pollid),
                         user: {$in: [userid, null]}
                     }, (err, docs) => {
-                        if (!userid) rej("debes estar logueado para votar...");
+                        if (!userid){
+                            rej("debes estar logueado para votar...");
+                        } else {
+                            db.insertOne({
+                                    type: "entryvote",
+                                    entry: mongodb.ObjectID(entryid),
+                                    votepoll: mongodb.ObjectID(pollid),
+                                    user: userid
+                                },
+                                (err, docs) => {
+                                    if (err) rej(err);
 
-                        db.insertOne({
-                                type: "entryvote",
-                                entry: mongodb.ObjectID(entryid),
-                                votepoll: mongodb.ObjectID(pollid),
-                                user: userid
-                            },
-                            (err, docs) => {
-                                if (err) rej(err);
+                                    res(`votaste por ${_.get(entry, "name")}...`);
+                                })
 
-                                res(`votaste por ${_.get(entry, "name")}...`);
-                            })
+                        }
                     })
                 } else {
                     rej("opcion inexistente :0")
