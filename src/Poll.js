@@ -19,6 +19,7 @@ class Poll extends React.Component {
     render() {
         const entries = _.chain(this).get("props.poll.entries").sortBy(a => -_.get(a, "votes.length", 0)).value();
         const higherVotes = _.chain(entries).map("votes.length").sortBy(a => a).last().dflt(1).value();
+        const totalVotes = _.chain(entries).map("votes.length").reduce((a, b) => a + b).value()
         const isAdmin = _.includes(_.get(this, "props.userData.permissions"), "any");
 
         const pollActive = _.get(this, "props.poll.status") !== "closed";
@@ -41,7 +42,9 @@ class Poll extends React.Component {
                 st: "addingentry",
                 returns: (
                     <div className="poll">
-                        <p><span>{_.get(this, "props.poll.name", "unnamed")}{pollActive ? "" : " (cerrada)"}</span></p>
+                        <p><span>{_.get(this, "props.poll.name", "unnamed")}
+                            {` (${totalVotes} ${_.gt(totalVotes, 1) ? "votos" : "voto"})`}
+                            {pollActive ? "" : " (cerrada)"}</span></p>
                         <div className="entries">{entriesdom}</div>
                         <p>
                         <span>
@@ -56,7 +59,9 @@ class Poll extends React.Component {
             {
                 returns: (
                     <div className="poll">
-                        <p><span>{_.get(this, "props.poll.name", "unnamed")}{pollActive ? "" : " (cerrada)"}</span></p>
+                        <p><span>{_.get(this, "props.poll.name", "unnamed")}
+                        {` (${totalVotes} ${_.gt(totalVotes, 1) ? "votos" : "voto"})`}
+                        {pollActive ? "" : " (cerrada)"}</span></p>
                         <div className="entries">{entriesdom}</div>
                         <p>
                         <span>
