@@ -405,7 +405,7 @@ const createPoll = function(name) {
         getDB().then(db => {
             db.find({type: "poll", name: name}).toArray((err, docs) => {
                 if (_.isEmpty(docs)) {
-                    db.insertOne({type: "poll", name: name}, (err, docs) => {
+                    db.insertOne({type: "poll", name: name, status: "active"}, (err, docs) => {
                         if (err) rej(err);
 
                         res(`votacion ${name} creada...`);
@@ -568,6 +568,52 @@ const deletePoll = function(pollId) {
     })
 };
 
+const closePoll = function(pollId) {
+    return new Promise((res, rej) => {
+        getDB().then(db => {
+            getPollById(pollId).then(poll => {
+                if(!poll) rej("no se encontro la votacion :0");
+
+                db.updateOne({
+                    type: "poll",
+                    _id: mongodb.ObjectID(pollId)
+                }, {
+                    $set: {
+                        status: "closed"
+                    }
+                }, (err, docs) => {
+                    if(err) rej(err);
+
+                    res(`votacion ${_.get(poll, "name")} cerrada...`);
+                })
+            })
+        })
+    });
+};
+
+const activatePoll = function(pollId) {
+    return new Promise((res, rej) => {
+        getDB().then(db => {
+            getPollById(pollId).then(poll => {
+                if(!poll) rej("no se encontro la votacion :0");
+
+                db.updateOne({
+                    type: "poll",
+                    _id: mongodb.ObjectID(pollId)
+                }, {
+                    $set: {
+                        status: "active"
+                    }
+                }, (err, docs) => {
+                    if(err) rej(err);
+
+                    res(`votacion ${_.get(poll, "name")} activada...`);
+                })
+            })
+        })
+    });
+};
+
 const getPollById = function(pollid) {
     return new Promise((res, rej) => {
         getDB().then(db => {
@@ -701,5 +747,7 @@ module.exports = {
     createPollEntry,
     voteEntryPoll,
     deletePollEntry,
+    closePoll,
+    activatePoll,
     test: test
 };

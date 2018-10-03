@@ -13,7 +13,7 @@ class Poll extends React.Component {
             status: "loaded"
         };
 
-        _.bindAll(this, "createEntry", "creatingEntry", "deletePoll", "voteEntry", "deleteEntry", "checkInput", "resetState")
+        _.bindAll(this, "createEntry", "creatingEntry", "deletePoll", "closePoll", "activatePoll", "voteEntry", "deleteEntry", "checkInput", "resetState")
     }
 
     render() {
@@ -21,6 +21,7 @@ class Poll extends React.Component {
         const higherVotes = _.chain(entries).map("votes.length").sortBy(a => a).last().dflt(1).value();
         const isAdmin = _.includes(_.get(this, "props.userData.permissions"), "any");
 
+        const pollActive = _.get(this, "props.poll.status") !== "closed";
         const entriesdom = _.chain(entries)
             .map(entry => <div className="entry" key={_.get(entry, "_id")}>
                 <span className="entryname"><strong>{_.get(entry, "name")}</strong></span>
@@ -28,7 +29,7 @@ class Poll extends React.Component {
                     <span style={{width: `${_.get(entry, "votes.length", 1) * 100 / higherVotes}%`}}/>
                 </div>
                 <div className="entrybtns">
-                    <a onClick={this.voteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>👍</a>&nbsp;
+                    {pollActive && <a onClick={this.voteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>👍</a>}&nbsp;
                     {isAdmin && <a onClick={this.deleteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>⛔</a>}
                 </div>
 
@@ -40,7 +41,7 @@ class Poll extends React.Component {
                 st: "addingentry",
                 returns: (
                     <div className="poll">
-                        <p><span>{_.get(this, "props.poll.name", "unnamed")}</span></p>
+                        <p><span>{_.get(this, "props.poll.name", "unnamed")}{pollActive ? "" : " (cerrada)"}</span></p>
                         <div className="entries">{entriesdom}</div>
                         <p>
                         <span>
@@ -55,11 +56,15 @@ class Poll extends React.Component {
             {
                 returns: (
                     <div className="poll">
-                        <p><span>{_.get(this, "props.poll.name", "unnamed")}</span></p>
+                        <p><span>{_.get(this, "props.poll.name", "unnamed")}{pollActive ? "" : " (cerrada)"}</span></p>
                         <div className="entries">{entriesdom}</div>
                         <p>
                         <span>
                             <button onClick={this.creatingEntry}>agregar opcion</button>
+                            {isAdmin && (pollActive ?
+                                <button onClick={this.closePoll}>cerrar votacion</button>
+                                :<button onClick={this.activatePoll}>activar votacion</button>
+                            )}
                             {isAdmin && <button onClick={this.deletePoll}>eliminar votacion</button>}
                         </span>
                         </p>
@@ -113,6 +118,18 @@ class Poll extends React.Component {
         const userid = _.get(this, "props.userData.id");
         const pollid = _.get(this, "props.poll._id");
         socketEmit("deletepoll", {pollid: pollid, userid: userid});
+    }
+
+    closePoll() {
+        const userid = _.get(this, "props.userData.id");
+        const pollid = _.get(this, "props.poll._id");
+        socketEmit("closepoll", {pollid: pollid, userid: userid});
+    }
+
+    activatePoll() {
+        const userid = _.get(this, "props.userData.id");
+        const pollid = _.get(this, "props.poll._id");
+        socketEmit("activatepoll", {pollid: pollid, userid: userid});
     }
 
     resetState() {
