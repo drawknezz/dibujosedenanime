@@ -46,6 +46,8 @@ class Poll extends React.Component {
             })
             .value();
 
+        const usernamesdom = _.gt(userNames.length, 0) ? <p className={"pollUserNames"}><span><strong>usuarios: </strong></span>{userNames}</p> : null;
+
         return _.ruleMatch({st: _.get(this, "state.status")}, [
             {
                 st: "addingentry",
@@ -54,7 +56,7 @@ class Poll extends React.Component {
                         <p><span>{_.get(this, "props.poll.name", "unnamed")}
                             {` (${totalVotes} ${_.gt(totalVotes, 1) || _.eq(totalVotes, 0) ? "votos" : "voto"})`}
                             {pollActive ? "" : " (cerrada)"}</span></p>
-                        <p className={"pollUserNames"}><span><strong>usuarios: </strong></span>{userNames}</p>
+                        {usernamesdom}
                         <div className="entries">{entriesdom}</div>
                         <p>
                         <span>
@@ -73,7 +75,7 @@ class Poll extends React.Component {
                         <p><span>{_.get(this, "props.poll.name", "unnamed")}
                             {` (${totalVotes} ${_.gt(totalVotes, 1) || _.eq(totalVotes, 0) ? "votos" : "voto"})`}
                             {pollActive ? "" : " (cerrada)"}</span></p>
-                        <p className={"pollUserNames"}><span><strong>usuarios: </strong></span>{userNames}</p>
+                        {usernamesdom}
                         <div className="entries">{entriesdom}</div>
                         <p>
                         <span>
