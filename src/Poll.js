@@ -41,12 +41,12 @@ class Poll extends React.Component {
         const userNames = _.chain(this).get("props.poll.entries").map("votes").flatten().map("username").flatten()
             .map(name => {
                 let fullname = _.get(name, "name");
-                let showname = _.chain(fullname).words().first().assert(txt => txt.length > 3, _.identity, fullname).dflt("anon").value();
-                return <span key={_.get(name, "_id")}>{showname}</span>
+                return _.chain(fullname).words().first().assert(txt => txt.length > 3, _.identity, fullname).dflt("anon").value();
             })
+            .join(",")
             .value();
 
-        const usernamesdom = _.gt(userNames.length, 0) ? <p className={"pollUserNames"}><span><strong>usuarios: </strong></span>{userNames}</p> : null;
+        const usernamesdom = _.gt(userNames.length, 0) ? <p className={"pollUserNames"}><span><strong>usuarios: </strong> {userNames}</span></p> : null;
 
         return _.ruleMatch({st: _.get(this, "state.status")}, [
             {
