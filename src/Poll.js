@@ -43,7 +43,7 @@ class Poll extends React.Component {
                 let fullname = _.get(name, "name");
                 return _.chain(fullname).words().first().assert(txt => txt.length > 3, _.identity, fullname).dflt("anon").value();
             })
-            .join(",")
+            .join(", ")
             .value();
 
         const usernamesdom = _.gt(userNames.length, 0) ? <p className={"pollUserNames"}><span><strong>usuarios: </strong> {userNames}</span></p> : null;
