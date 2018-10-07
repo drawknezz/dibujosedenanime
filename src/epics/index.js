@@ -13,6 +13,7 @@ import {
     LOGOUT, userPermissionsLoaded
 } from "../actions";
 import * as axios from "axios";
+import {socketEmit} from "../api";
 
 function loginEpic(actions$) {
     return actions$.pipe(
@@ -59,7 +60,16 @@ function checkLoginStatusEpic(actions$) {
                 return Observable.from([{response: response}]);
             }
         }),
-        map(action => loginStatusUpdated(action))
+        map(action => {
+            if (_.get(action, "userInfo.data.name")) {
+                socketEmit("userlogged", {
+                    name: _.get(action, "userInfo.data.name"),
+                    facebookId: _.get(action, "response.authResponse.userID")
+                });
+            }
+
+            return loginStatusUpdated(action)
+        })
     );
 }
 
