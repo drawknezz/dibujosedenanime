@@ -40,8 +40,9 @@ app.get("/", function (request, response) {
 
 app.get("/getUserPermission", function(request, response) {
     const user = _.get(request, "query.userid");
-    console.log("getting permissions for user id: ", user);
     db.getUserById(user).then(userdata => {
+        console.log(`getting permissions for user ${_.get(userdata, "name")} id: ${user}`);
+
         response.send(_.get(userdata, "permissions"));
     })
 });

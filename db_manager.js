@@ -461,17 +461,19 @@ const ensureUserHasNotVotedOnPoll = function (pollid, userid) {
 const voteEntryPoll = function (entryid, pollid, userid) {
     return new Promise((res, rej) => {
         getDB().then(db => {
-            getEntryById(entryid).then(entry => {
-                if (entry) {
-
-                    db.deleteMany({
-                        type: "entryvote",
-                        votepoll: mongodb.ObjectID(pollid),
-                        user: {$in: [userid, null]}
-                    }, (err, docs) => {
-                        if (!userid) {
-                            rej("debes estar logueado para votar...");
-                        } else {
+            Promise.props({
+                entry: getEntryById(entryid),
+                user: getUserById(userid)
+            }).then(data => {
+                db.deleteMany({
+                    type: "entryvote",
+                    votepoll: mongodb.ObjectID(pollid),
+                    user: {$in: [userid, null]}
+                }, (err, docs) => {
+                    if (!data.user) {
+                        rej("debes estar logueado para votar...");
+                    } else {
+                        if (data.entry) {
                             db.insertOne({
                                     type: "entryvote",
                                     entry: mongodb.ObjectID(entryid),
@@ -481,14 +483,14 @@ const voteEntryPoll = function (entryid, pollid, userid) {
                                 (err, docs) => {
                                     if (err) rej(err);
 
-                                    res(`votaste por ${_.get(entry, "name")}...`);
+                                    res(`votaste por ${_.get(data, "entry.name")}...`);
                                 })
 
+                        } else {
+                            rej("opcion inexistente :0")
                         }
-                    })
-                } else {
-                    rej("opcion inexistente :0")
-                }
+                    }
+                })
             });
         });
     })
@@ -551,7 +553,6 @@ const deletePoll = function (pollId) {
                 const votesIds = _.chain(docs).map("entries").flatten().map("votes").flatten().map("_id").value();
 
                 db.deleteMany({$id: {$in: _.union(pollids, entryIds, votesIds)}})
-
             });
         });
 
