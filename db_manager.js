@@ -519,6 +519,41 @@ const deletePollEntry = function (entryid, pollid) {
     })
 };
 
+const deleteInvalidUserVotes = function() {
+    return new Promise((res, rej) => {
+        getDB().then(db => {
+            db.aggregate([
+                {
+                    $match: {
+                        type: "entryvote"
+                    }
+                },
+                {
+                    $lookup: {
+                        from: collectionName,
+                        localField: "user",
+                        foreignField: "fid",
+                        as: "user"
+                    }
+                },
+                {
+                    $match: {
+                        user: {$size: 0}
+                    }
+                }
+            ]).toArray((err, docs) => {
+                db.deleteMany({_id: {$in: _.chain(docs).map("_id").map(id => mongodb.ObjectID(id)).value()}}, (err, ddocs) => {
+                    if (err) rej(err);
+                    if (_.gt(_.get(ddocs, "deletedCount", 0), 0)) {
+                        console.log(`removed ${_.get(ddocs, "deletedCount")} votes coz they had invalid users`);
+                    }
+                    res();
+                });
+            })
+        })
+    })
+};
+
 const deletePoll = function (pollId) {
     return new Promise((res, rej) => {
         getDB().then(db => {
@@ -650,102 +685,67 @@ const getPollByName = function (name) {
 
 const getAllPolls = function () {
     return new Promise((res, rej) => {
-        getDB().then(db => {
-            db.aggregate([
-                {
-                    $match: {
-                        type: "poll"
-                    }
-                },
-                {
-                    $lookup: {
-                        from: collectionName,
-                        let: {pollid: "$_id"},
-                        pipeline: [
-                            {$match: {$expr: {$and: [{$eq: ["$type", "pollentry"]}, {$eq: ["$poll", "$$pollid"]}]}}},
-                            {
-                                $lookup: {
-                                    from: collectionName,
-                                    let: {entryid: "$_id"},
-                                    pipeline: [
-                                        {$match: {$expr: {$and: [{$eq: ["$type", "entryvote"]}, {$eq: ["$entry", "$$entryid"]}, {$eq: ["$votepoll", "$$pollid"]}]}}},
-                                        {
-                                            $lookup: {
-                                                from: collectionName,
-                                                let: {userid: "$user"},
-                                                pipeline: [
-                                                    {
-                                                        $match: {
-                                                            $expr: {
-                                                                $and: [
-                                                                    {$eq: ["$type", "user"]},
-                                                                    {$eq: ["$fid", "$$userid"]}
-                                                                ]
+        return deleteInvalidUserVotes().then(() => {
+            getDB().then(db => {
+                db.aggregate([
+                    {
+                        $match: {
+                            type: "poll"
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: collectionName,
+                            let: {pollid: "$_id"},
+                            pipeline: [
+                                {$match: {$expr: {$and: [{$eq: ["$type", "pollentry"]}, {$eq: ["$poll", "$$pollid"]}]}}},
+                                {
+                                    $lookup: {
+                                        from: collectionName,
+                                        let: {entryid: "$_id"},
+                                        pipeline: [
+                                            {$match: {$expr: {$and: [{$eq: ["$type", "entryvote"]}, {$eq: ["$entry", "$$entryid"]}, {$eq: ["$votepoll", "$$pollid"]}]}}},
+                                            {
+                                                $lookup: {
+                                                    from: collectionName,
+                                                    let: {userid: "$user"},
+                                                    pipeline: [
+                                                        {
+                                                            $match: {
+                                                                $expr: {
+                                                                    $and: [
+                                                                        {$eq: ["$type", "user"]},
+                                                                        {$eq: ["$fid", "$$userid"]}
+                                                                    ]
+                                                                }
                                                             }
+                                                        },
+                                                        {
+                                                            $project: {name: 1}
                                                         }
-                                                    },
-                                                    {
-                                                        $project: {name: 1}
-                                                    }
-                                                ],
-                                                as: "username"
+                                                    ],
+                                                    as: "username"
+                                                }
                                             }
-                                        }
-                                    ],
-                                    as: "votes"
+                                        ],
+                                        as: "votes"
+                                    }
                                 }
-                            }
-                        ],
-                        as: "entries"
+                            ],
+                            as: "entries"
+                        }
                     }
-                }
-            ]).toArray((err, docs) => {
-                if (err) console.log("getAllPolls/ERROR: ", err);
-                res(docs)
+                ]).toArray((err, docs) => {
+                    if (err) console.log("getAllPolls/ERROR: ", err);
+                    res(docs)
+                });
             });
-        })
+        });
     })
 };
 
 
 const test = function () {
-    getDB().then(db => {
-        let cursor = db.aggregate([
-            {
-                $match: {
-                    type: "poll",
-                    _id: mongodb.ObjectID("5bac1f1857a01b1e104831d1")
-                }
-            },
-            {
-                $lookup: {
-                    from: collectionName,
-                    let: {pollid: "$_id"},
-                    pipeline: [
-                        {$match: {$expr: {$and: [{$eq: ["$type", "pollentry"]}, {$eq: ["$poll", "$$pollid"]}]}}},
-                        {
-                            $lookup: {
-                                from: collectionName,
-                                localField: "_id",
-                                foreignField: "entry",
-                                as: "votes"
-                            }
-                        }
-                    ],
-                    as: "entries"
-                }
-            }
-        ]);
-
-        let result = cursor.toArray((err, docs) => {
-            const pollids = _.map(docs, "_id");
-            const entryIds = _.chain(docs).map("entries").flatten().map("_id").value();
-            const votesIds = _.chain(docs).map("entries").flatten().map("votes").flatten().map("_id").value();
-
-            console.log(_.union(pollids, entryIds, votesIds));
-
-        });
-    })
 };
 
 module.exports = {
