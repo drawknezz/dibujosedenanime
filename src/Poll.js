@@ -38,6 +38,14 @@ class Poll extends React.Component {
             </div>)
             .value();
 
+        const userNames = _.chain(this).get("props.poll.entries").map("votes").flatten().map("username").flatten()
+            .map(name => {
+                let fullname = _.get(name, "name");
+                let showname = _.chain(fullname).words().first().assert(txt => txt.length > 3, _.identity, fullname).dflt("anon").value();
+                return <span key={_.get(name, "_id")}>{showname}</span>
+            })
+            .value();
+
         return _.ruleMatch({st: _.get(this, "state.status")}, [
             {
                 st: "addingentry",
@@ -46,6 +54,7 @@ class Poll extends React.Component {
                         <p><span>{_.get(this, "props.poll.name", "unnamed")}
                             {` (${totalVotes} ${_.gt(totalVotes, 1) || _.eq(totalVotes, 0) ? "votos" : "voto"})`}
                             {pollActive ? "" : " (cerrada)"}</span></p>
+                        <p className={"pollUserNames"}><span><strong>usuarios: </strong></span>{userNames}</p>
                         <div className="entries">{entriesdom}</div>
                         <p>
                         <span>
@@ -64,6 +73,7 @@ class Poll extends React.Component {
                         <p><span>{_.get(this, "props.poll.name", "unnamed")}
                             {` (${totalVotes} ${_.gt(totalVotes, 1) || _.eq(totalVotes, 0) ? "votos" : "voto"})`}
                             {pollActive ? "" : " (cerrada)"}</span></p>
+                        <p className={"pollUserNames"}><span><strong>usuarios: </strong></span>{userNames}</p>
                         <div className="entries">{entriesdom}</div>
                         <p>
                         <span>

@@ -39,7 +39,7 @@ class Polls extends React.Component {
             {
                 s: "loaded",
                 returns: <div className="pollscontents">
-                    <p><h4>votaciones (beta)</h4></p>
+                    <h4>votaciones (beta)</h4>
                     <div key="pollscontroles">
                         {isAdmin && <p><span><button onClick={this.creatingPoll}>crear nueva votacion</button></span>
                         </p>}

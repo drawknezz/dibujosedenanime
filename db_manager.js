@@ -6,7 +6,7 @@ let uri = "mongodb://dibujosadmin:memosupremo3@ds255797.mlab.com:55797/heroku_3l
 
 let collectionName = process.env.NODE_ENV === "local" ? "dibujoslocal" : "dibujos";
 
-const getDB = (function() {
+const getDB = (function () {
     let dbpromise = new Promise((res, rej) => {
         console.log("connecting to the DB...", new Date());
         return mongodb.MongoClient.connect(uri, {useNewUrlParser: true}).then(client => {
@@ -18,13 +18,13 @@ const getDB = (function() {
         }).catch(err => rej(err));
     });
 
-    return function() {
+    return function () {
         return dbpromise;
     }
 })();
 
-const setSorteoForReto = function(retoId, sorteoArr) {
-    return new Promise(function(res, rej) {
+const setSorteoForReto = function (retoId, sorteoArr) {
+    return new Promise(function (res, rej) {
         console.log("sorting for reto " + retoId);
 
         getDB().then(db => {
@@ -41,7 +41,7 @@ const setSorteoForReto = function(retoId, sorteoArr) {
                     db.updateOne({
                         reto: mongodb.ObjectID(retoId),
                         type: "sorteo"
-                    }, {$set: {values: sorteoArr}}, function(err, numReplaced) {
+                    }, {$set: {values: sorteoArr}}, function (err, numReplaced) {
                         console.log(_.get(numReplaced, "matchedCount") + " docs updated for sort");
                     });
                     res("datos actualizados");
@@ -51,8 +51,8 @@ const setSorteoForReto = function(retoId, sorteoArr) {
     });
 };
 
-const getSorteoForReto = function(retoId) {
-    return new Promise(function(res, rej) {
+const getSorteoForReto = function (retoId) {
+    return new Promise(function (res, rej) {
         getDB().then(db => {
             db.findOne({reto: mongodb.ObjectID(retoId), type: "sorteo"}, (err, docs) => {
                 if (err) rej(err);
@@ -63,8 +63,8 @@ const getSorteoForReto = function(retoId) {
     });
 };
 
-const getAllCharsForReto = function(retoId) {
-    return new Promise(function(res, rej) {
+const getAllCharsForReto = function (retoId) {
+    return new Promise(function (res, rej) {
         getDB().then(db => {
             db.find({
                 reto: mongodb.ObjectID(retoId),
@@ -77,8 +77,8 @@ const getAllCharsForReto = function(retoId) {
     });
 };
 
-const getAllMembersForReto = function(retoId) {
-    return new Promise(function(res, rej) {
+const getAllMembersForReto = function (retoId) {
+    return new Promise(function (res, rej) {
         getDB().then(db => {
             db.find({
                 type: "member",
@@ -91,8 +91,8 @@ const getAllMembersForReto = function(retoId) {
     });
 };
 
-const createMember = function(name, retoId) {
-    return new Promise(function(res, rej) {
+const createMember = function (name, retoId) {
+    return new Promise(function (res, rej) {
         getDB().then(db => {
             db.find({
                 type: "member",
@@ -119,8 +119,8 @@ const createMember = function(name, retoId) {
     });
 };
 
-const deleteMember = function(id) {
-    return new Promise(function(res, rej) {
+const deleteMember = function (id) {
+    return new Promise(function (res, rej) {
         getDB().then(db => {
             db.deleteOne({
                 "type": "member",
@@ -136,8 +136,8 @@ const deleteMember = function(id) {
     });
 };
 
-const deleteChar = function(id) {
-    return new Promise(function(res, rej) {
+const deleteChar = function (id) {
+    return new Promise(function (res, rej) {
         getDB().then(db => {
             db.deleteOne(
                 {_id: mongodb.ObjectID(id), type: "char"}, (err, docs) => {
@@ -148,8 +148,8 @@ const deleteChar = function(id) {
     });
 };
 
-const getCharById = function(id) {
-    return new Promise(function(res, rej) {
+const getCharById = function (id) {
+    return new Promise(function (res, rej) {
         getDB().then(db => {
             db.find({
                 type: "char",
@@ -162,8 +162,8 @@ const getCharById = function(id) {
     });
 };
 
-const getMemberById = function(id) {
-    return new Promise(function(res, rej) {
+const getMemberById = function (id) {
+    return new Promise(function (res, rej) {
         getDB().then(db => {
             db.find({
                 type: "member",
@@ -176,8 +176,8 @@ const getMemberById = function(id) {
     });
 };
 
-const assignPermissionsToUser = function(userid, permissions) {
-    return new Promise(function(res, rej) {
+const assignPermissionsToUser = function (userid, permissions) {
+    return new Promise(function (res, rej) {
         getDB().then(db => {
             getUserById(userid).then(user => {
                 console.log(`promoting member ${_.get(user, "name")}(${userid})`);
@@ -198,8 +198,8 @@ const assignPermissionsToUser = function(userid, permissions) {
     });
 };
 
-const createChar = function(name, serie, retoId) {
-    return new Promise(function(res, rej) {
+const createChar = function (name, serie, retoId) {
+    return new Promise(function (res, rej) {
         getDB().then(db => {
             db.find({
                 type: "char",
@@ -228,7 +228,7 @@ const createChar = function(name, serie, retoId) {
     });
 };
 
-const createReto = function(name) {
+const createReto = function (name) {
     return new Promise((res, rej) => {
         debugger;
         getDB().then(db => {
@@ -245,7 +245,7 @@ const createReto = function(name) {
     })
 };
 
-const getReto = function(id) {
+const getReto = function (id) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.find({
@@ -259,7 +259,7 @@ const getReto = function(id) {
     })
 };
 
-const deleteReto = function(id) {
+const deleteReto = function (id) {
     return new Promise((res, rej) => {
         return getReto(id).then(reto => {
             return Promise.props({
@@ -306,7 +306,7 @@ const deleteReto = function(id) {
     })
 };
 
-const getLastReto = function() {
+const getLastReto = function () {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.find({type: "reto"}).toArray((err, docs) => {
@@ -318,7 +318,7 @@ const getLastReto = function() {
     })
 };
 
-const getInfoTxt = function() {
+const getInfoTxt = function () {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.findOne({type: "info"}, (err, docs) => {
@@ -329,7 +329,7 @@ const getInfoTxt = function() {
     })
 };
 
-const setInfoTxt = function(txt) {
+const setInfoTxt = function (txt) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.find({type: "info"}).toArray((err, docs) => {
@@ -351,7 +351,7 @@ const setInfoTxt = function(txt) {
     })
 };
 
-const createUser = function(name, fid) {
+const createUser = function (name, fid) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.find({type: "user", fid: fid}).toArray((err, docs) => {
@@ -378,7 +378,7 @@ const createUser = function(name, fid) {
     })
 };
 
-const getUserById = function(fid) {
+const getUserById = function (fid) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.findOne({type: "user", fid: fid}, (err, docs) => {
@@ -389,7 +389,7 @@ const getUserById = function(fid) {
     })
 };
 
-const getEntryById = function(entryid) {
+const getEntryById = function (entryid) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.findOne({type: "pollentry", _id: mongodb.ObjectID(entryid)}, (err, docs) => {
@@ -400,7 +400,7 @@ const getEntryById = function(entryid) {
     })
 };
 
-const createPoll = function(name) {
+const createPoll = function (name) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.find({type: "poll", name: name}).toArray((err, docs) => {
@@ -422,7 +422,7 @@ const createPoll = function(name) {
     })
 };
 
-const createPollEntry = function(name, pollid) {
+const createPollEntry = function (name, pollid) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             getPollById(pollid).then(poll => {
@@ -440,7 +440,7 @@ const createPollEntry = function(name, pollid) {
     });
 };
 
-const ensureUserHasNotVotedOnPoll = function(pollid, userid) {
+const ensureUserHasNotVotedOnPoll = function (pollid, userid) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.find({
@@ -458,7 +458,7 @@ const ensureUserHasNotVotedOnPoll = function(pollid, userid) {
     })
 };
 
-const voteEntryPoll = function(entryid, pollid, userid) {
+const voteEntryPoll = function (entryid, pollid, userid) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             getEntryById(entryid).then(entry => {
@@ -469,7 +469,7 @@ const voteEntryPoll = function(entryid, pollid, userid) {
                         votepoll: mongodb.ObjectID(pollid),
                         user: {$in: [userid, null]}
                     }, (err, docs) => {
-                        if (!userid){
+                        if (!userid) {
                             rej("debes estar logueado para votar...");
                         } else {
                             db.insertOne({
@@ -494,7 +494,7 @@ const voteEntryPoll = function(entryid, pollid, userid) {
     })
 };
 
-const deletePollEntry = function(entryid, pollid) {
+const deletePollEntry = function (entryid, pollid) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.deleteMany({
@@ -517,7 +517,7 @@ const deletePollEntry = function(entryid, pollid) {
     })
 };
 
-const deletePoll = function(pollId) {
+const deletePoll = function (pollId) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.aggregate([
@@ -571,11 +571,11 @@ const deletePoll = function(pollId) {
     })
 };
 
-const closePoll = function(pollId) {
+const closePoll = function (pollId) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             getPollById(pollId).then(poll => {
-                if(!poll) rej("no se encontro la votacion :0");
+                if (!poll) rej("no se encontro la votacion :0");
 
                 db.updateOne({
                     type: "poll",
@@ -585,7 +585,7 @@ const closePoll = function(pollId) {
                         status: "closed"
                     }
                 }, (err, docs) => {
-                    if(err) rej(err);
+                    if (err) rej(err);
 
                     res(`votacion ${_.get(poll, "name")} cerrada...`);
                 })
@@ -594,11 +594,11 @@ const closePoll = function(pollId) {
     });
 };
 
-const activatePoll = function(pollId) {
+const activatePoll = function (pollId) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             getPollById(pollId).then(poll => {
-                if(!poll) rej("no se encontro la votacion :0");
+                if (!poll) rej("no se encontro la votacion :0");
 
                 db.updateOne({
                     type: "poll",
@@ -608,7 +608,7 @@ const activatePoll = function(pollId) {
                         status: "active"
                     }
                 }, (err, docs) => {
-                    if(err) rej(err);
+                    if (err) rej(err);
 
                     res(`votacion ${_.get(poll, "name")} activada...`);
                 })
@@ -617,7 +617,7 @@ const activatePoll = function(pollId) {
     });
 };
 
-const getPollById = function(pollid) {
+const getPollById = function (pollid) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.findOne({
@@ -632,7 +632,7 @@ const getPollById = function(pollid) {
     })
 };
 
-const getPollByName = function(name) {
+const getPollByName = function (name) {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.findOne({
@@ -647,7 +647,7 @@ const getPollByName = function(name) {
     })
 };
 
-const getAllPolls = function() {
+const getAllPolls = function () {
     return new Promise((res, rej) => {
         getDB().then(db => {
             db.aggregate([
@@ -665,8 +665,32 @@ const getAllPolls = function() {
                             {
                                 $lookup: {
                                     from: collectionName,
-                                    localField: "_id",
-                                    foreignField: "entry",
+                                    let: {entryid: "$_id"},
+                                    pipeline: [
+                                        {$match: {$expr: {$and: [{$eq: ["$type", "entryvote"]}, {$eq: ["$entry", "$$entryid"]}, {$eq: ["$votepoll", "$$pollid"]}]}}},
+                                        {
+                                            $lookup: {
+                                                from: collectionName,
+                                                let: {userid: "$user"},
+                                                pipeline: [
+                                                    {
+                                                        $match: {
+                                                            $expr: {
+                                                                $and: [
+                                                                    {$eq: ["$type", "user"]},
+                                                                    {$eq: ["$fid", "$$userid"]}
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    {
+                                                        $project: {name: 1}
+                                                    }
+                                                ],
+                                                as: "username"
+                                            }
+                                        }
+                                    ],
                                     as: "votes"
                                 }
                             }
@@ -683,7 +707,7 @@ const getAllPolls = function() {
 };
 
 
-const test = function() {
+const test = function () {
     getDB().then(db => {
         let cursor = db.aggregate([
             {

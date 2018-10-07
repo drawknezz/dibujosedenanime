@@ -9,6 +9,14 @@
     margin: 0;
 }
 
+.pollscontents h4 {
+    text-align: center;
+}
+
+.pollUserNames {
+    font-size: 12px;
+}
+
 .entries {
     margin: 10px 0;
 }

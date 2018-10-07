@@ -24,7 +24,7 @@
   "scripts": {
     "start": "node server.js",
     "startlocal": "set NODE_ENV=local&&node %NODE_DEBUG_OPTION% server.js",
-    "dev": "react-scripts start",
+    "dev": "set HTTPS=true&&react-scripts start",
     "postinstall": "react-scripts build",
     "test": "jest",
     "debug": "set NODE_ENV=debug&&npm test",
