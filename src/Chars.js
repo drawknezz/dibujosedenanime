@@ -3,6 +3,7 @@ import Char from './Char';
 import _ from './mixins';
 import {socketEmit} from './api';
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
+import {connect} from 'react-redux'
 
 class Chars extends Component {
     constructor() {
@@ -17,9 +18,11 @@ class Chars extends Component {
 
     render() {
         let chars = _.get(this, "props.chars", []);
+        let isAdmin = _.includes(_.get(this, "props.userData.permissions"), "any");
 
         return _.ruleMatch({
-            s: this.state.status
+            s: this.state.status,
+            admin: isAdmin
         }, [
             {
                 s: "loading",
@@ -38,7 +41,6 @@ class Chars extends Component {
                         <div className="controles">
                             <label>nombre: <input ref="charNameTxt"/></label>
                             <label>serie: <input ref="charSerieTxt"/></label>
-                            <label>clave: <input type="password" ref="claveInput"/></label>
                             <button onClick={this.sendNewChar}>agregar</button>
                             <button onClick={this.resetStatus}>cancelar</button>
                         </div>
@@ -73,7 +75,7 @@ class Chars extends Component {
                             <p><textarea ref="manyNamesTxt" onChange={this.updateManyCharsInfo}/></p>
                             <ReactCSSTransitionGroup
                                 component="div"
-                                className={"charsList " + (_.isEmpty(chars) ? "empty" : "")}
+                                className={"manychars " + (_.isEmpty(chars) ? "empty" : "")}
                                 transitionName="membertransition"
                                 transitionEnterTimeout={300}
                                 transitionLeaveTimeout={200}
@@ -85,7 +87,6 @@ class Chars extends Component {
                                     </div>).value()
                             }</ReactCSSTransitionGroup>
                             <p>
-                                <label>clave: <input type="password" ref="claveInput"/></label>
                                 <button onClick={this.sendManyChars}>agregar ({_.get(this, "state.manychars.length")})
                                 </button>
                                 <button onClick={this.resetStatus}>cancelar</button>
@@ -115,10 +116,10 @@ class Chars extends Component {
                 s: "loaded",
                 returns: (
                     <div className="bloque pad">
-                        <div className="controles">
+                        {isAdmin ? <div className="controles">
                             <button onClick={this.createChar}>agregar personaje</button>
                             <button onClick={this.createMany}>agregar varios</button>
-                        </div>
+                        </div> : null}
 
                         <ReactCSSTransitionGroup
                             component="div"
@@ -168,17 +169,18 @@ class Chars extends Component {
     sendNewChar() {
         let name = _.get(this, "refs.charNameTxt.value");
         let serie = _.get(this, "refs.charSerieTxt.value");
-        let pass = _.get(this, "refs.claveInput.value");
+        const userid = _.get(this, "props.userData.id");
 
-        socketEmit("createchar", {name: name, serie: serie, pass: pass});
+
+        socketEmit("createchar", {name: name, serie: serie, userid});
         this.resetStatus();
     }
 
     sendManyChars() {
         let chars = _.get(this, "state.manychars");
-        let pass = _.get(this, "refs.claveInput.value");
+        const userid = _.get(this, "props.userData.id");
 
-        socketEmit("createmanychars", {chars: chars, pass: pass});
+        socketEmit("createmanychars", {chars: chars, userid});
 
         this.resetStatus();
     }
@@ -188,4 +190,4 @@ class Chars extends Component {
     }
 }
 
-export default Chars;
+export default connect(state => state)(Chars);

@@ -111,8 +111,8 @@ class Members extends Component {
                         </ReactCSSReplace>
 
                         <p>
-                                <span><input type="checkbox" checked={this.state.checked} ref="unassignedonlycheck"
-                                             onChange={this.unassignedFilterChange}/> solo no asignados</span>
+                            <span><input type="checkbox" checked={this.state.checked} ref="unassignedonlycheck"
+                                 onChange={this.unassignedFilterChange}/> solo no asignados</span>
                         </p>
                         <label>filtrar: <input type="text" ref="membersFilterTxt"
                                                value={_.get(this, "state.filterTxt", "")}

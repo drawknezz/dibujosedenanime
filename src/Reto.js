@@ -2,6 +2,7 @@ import React from "react";
 import _ from './mixins';
 import {socketEmit} from './api';
 import Members from "./Members";
+import {connect} from 'react-redux';
 
 class Reto extends React.Component {
     constructor() {
@@ -17,6 +18,7 @@ class Reto extends React.Component {
     render() {
         let status = this.state.status;
         let reto = _.get(this, "props.reto", <span>no asignado <button onClick={this.Asignar}>asignar</button></span>);
+        let isAdmin = _.includes(_.get(this, "props.userData.permissions"), "any");
 
         return _.ruleMatch({s: status}, [
             {
@@ -29,10 +31,10 @@ class Reto extends React.Component {
                     <div className={"bloquereto"}>
                         <h2>{_.get(reto, "name", "no asignado")}</h2>
                         <p><span>reto actual</span></p>
-                        <span>
+                        {isAdmin ? <span>
                             <button onClick={this.Asignar}>reasignar</button>
                             <button onClick={this.Delete}>eliminar</button>
-                        </span>
+                        </span> : null}
                     </div>
                     <div className={"retoscontent"}>
                         <Members members={this.props.members} loginData={_.get(this, "props.loginData")}/>
@@ -42,8 +44,7 @@ class Reto extends React.Component {
             {
                 s: "asignando",
                 returns: <p><span>reto actual: <i>asignando...</i>, nombre:
-                  <input type="text" ref="retoNameInput"/>,
-                  clave: <input type="password" ref="retoPassInput"/>
+                  <input type="text" ref="retoNameInput"/>
                   <button onClick={this.setReto}>asignar</button>
                   </span></p>
             },
@@ -56,7 +57,6 @@ class Reto extends React.Component {
                         <p><span>Al eliminarse el reto actual se mostrará la información del reto anterior, aunque no es necesario eliminar para crear un nuevo reto.</span>
                         </p>
                         <p><span>
-                            clave: <input type="password" ref="retoPassInput"/>
                             <button onClick={this.deleteReto}>confirmar</button>
                             <button onClick={this.resetState}>cancelar</button>
                         </span></p>
@@ -75,9 +75,10 @@ class Reto extends React.Component {
 
     setReto() {
         let reto = _.get(this, "refs.retoNameInput.value");
-        let pass = _.get(this, "refs.retoPassInput.value");
+        const userid = _.get(this, "props.userData.id");
 
-        socketEmit("createreto", {name: reto, pass: pass});
+
+        socketEmit("createreto", {name: reto, userid});
 
         this.resetState();
     }
@@ -87,9 +88,9 @@ class Reto extends React.Component {
     }
 
     deleteReto() {
-        let pass = _.get(this, "refs.retoPassInput.value");
+        const userid = _.get(this, "props.userData.id");
 
-        socketEmit("deletelastreto", {pass: pass});
+        socketEmit("deletelastreto", {userid});
 
         this.resetState();
     }
@@ -99,4 +100,4 @@ class Reto extends React.Component {
     }
 }
 
-export default Reto;
+export default connect(state => state)(Reto);

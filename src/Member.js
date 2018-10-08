@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import _ from './mixins';
 import { socketEmit } from "./api";
+import {connect} from 'react-redux';
 
 class Member extends Component {
     constructor() {
@@ -14,15 +15,16 @@ class Member extends Component {
     render() {
         let name = this.props.name;
         let char = this.props.char;
-        let closeBtn = <img src="https://cdn.glitch.com/e9b1b061-2e35-470e-9030-066922389a46%2Fdelete.svg?1536087131015"
+        let isAdmin = _.includes(_.get(this, "props.userData.permissions"), "any");
+        let closeBtn = isAdmin? <img src="https://cdn.glitch.com/e9b1b061-2e35-470e-9030-066922389a46%2Fdelete.svg?1536087131015"
                             alt="eliminar"
-                            onClick={this.deleting}/>;
+                            onClick={this.deleteMember}/> : null;
 
-        return _.ruleMatch({s: _.get(this, "state.status")}, [
+        return _.ruleMatch({s: _.get(this, "state.status"), admin: isAdmin}, [
             {
                 s: "borrando",
                 returns: (
-                    <div className="member">
+                    <div className={"member " + (char ? "asignado" : "")}>
                         <p className="memberName"><span><strong>borrando...<i>{name}</i></strong>, clave: </span></p>
                         <p><input type="password" ref="inputClave"/></p>
                         <p><a onClick={this.deleteMember}>eliminar</a> / <a onClick={this.resetState}>cancelar</a></p>
@@ -33,7 +35,7 @@ class Member extends Component {
             {
                 s: "asignando",
                 returns: (
-                    <div className="member">
+                    <div className={"member " + (char ? "asignado" : "")}>
                         {_.assertSelf(this.props.dis, null, closeBtn)}
                         <p className="memberName"><span><strong>{name}</strong></span></p>
                         <p className="charname"><span>personaje: <i>asignando</i>{char} clave:
@@ -47,7 +49,7 @@ class Member extends Component {
             {
                 s: "desasignando",
                 returns: (
-                    <div className="member">
+                    <div className={"member " + (char ? "asignado" : "")}>
                         {_.assertSelf(this.props.dis, null, closeBtn)}
                         <p className="memberName"><span><strong>{name}</strong></span></p>
                         <p className="charname">
@@ -61,13 +63,24 @@ class Member extends Component {
             },
 
             {
+                admin: true,
                 returns: (
-                    <div className="member">
+                    <div className={"member " + (char ? "asignado" : "")}>
                         {_.assertSelf(this.props.dis, null, closeBtn)}
                         <p className="memberName"><span><strong>{name}</strong></span></p>
                         <p className="charname"><span>personaje: {char ?
-                            <span>{char} <a onClick={this.unassigning}>desasignar</a></span> :
-                            <a onClick={this.assigning}>asignar al azar</a>}</span></p>
+                            <span>{char} <a onClick={this.unassign}>desasignar</a></span> :
+                            <a onClick={this.assignRandom}>asignar al azar</a>}</span></p>
+                    </div>
+                )
+            },
+
+            {
+                returns: (
+                    <div className={"member " + (char ? "asignado" : "")}>
+                        {_.assertSelf(this.props.dis, null, closeBtn)}
+                        <p className="memberName"><span><strong>{name}</strong></span></p>
+                        <p className="charname"><span>personaje: {char}</span></p>
                     </div>
                 )
             }
@@ -80,9 +93,9 @@ class Member extends Component {
 
     deleteMember() {
         let id = _.get(this, "props.id");
-        let pass = _.get(this, "refs.inputClave.value");
+        const userid = _.get(this, "props.userData.id");
 
-        socketEmit("deletemember", {id: id, pass: pass} );
+        socketEmit("deletemember", {id, userid} );
 
         this.resetState();
     }
@@ -93,9 +106,9 @@ class Member extends Component {
 
     assignRandom() {
         let id = _.get(this, "props.id");
-        let clave = _.get(this, "refs.claveInput.value");
+        const userid = _.get(this, "props.userData.id");
 
-        socketEmit("assignchartomember", {id: id, pass: clave} );
+        socketEmit("assignchartomember", {id, userid} );
 
         this.resetState();
     }
@@ -106,9 +119,9 @@ class Member extends Component {
 
     unassign() {
         let id = this.props.id;
-        let clave = _.get(this, "refs.claveInput.value");
+        const userid = _.get(this, "props.userData.id");
 
-        socketEmit("unassignmember", { id: id, pass: clave} );
+        socketEmit("unassignmember", { id, userid} );
 
         this.resetState();
     }
@@ -118,4 +131,4 @@ class Member extends Component {
     }
 }
 
-export default Member;
+export default connect(state => state)(Member);

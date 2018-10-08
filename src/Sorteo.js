@@ -2,6 +2,7 @@ import React from 'react';
 import _ from './mixins';
 import {socketEmit} from './api';
 import ReactCSSReplace from 'react-css-transition-replace';
+import {connect} from 'react-redux';
 
 class Sorteo extends React.Component {
     constructor() {
@@ -16,6 +17,7 @@ class Sorteo extends React.Component {
 
     render() {
         let status = this.state.status;
+        let isAdmin = _.includes(_.get(this, "props.userData.permissions"), "any");
 
         return _.ruleMatch({s: status, values: _.get(this, "props.sorteo.values")}, [
             {
@@ -34,8 +36,7 @@ class Sorteo extends React.Component {
                     >
                         <div key="sortingcontroles">
                             <p>
-                                <span><i>para sortear ingresa tu pass: </i>
-                                    <input type="password" ref="sorteoPassInput"/>
+                                <span><i>seguro?</i>
                                     <button onClick={this.sendSortear}>sortear</button>
                                     <button onClick={this.resetState}>cancelar</button>
                                 </span>
@@ -54,8 +55,10 @@ class Sorteo extends React.Component {
                     transitionLeaveTimeout={300}
                 >
                     <div key="loadedcontroles">
-                        <p><span>Sorteo: sorteo realizado <button
-                            onClick={this.Sortear}>volver a sortear</button></span>
+                        <p>
+                            <span>Sorteo: sorteo realizado&nbsp;
+                                {isAdmin ? <button onClick={this.Sortear}>volver a sortear</button> : null}
+                            </span>
                         </p>
                     </div>
                 </ReactCSSReplace>,
@@ -69,8 +72,9 @@ class Sorteo extends React.Component {
                     transitionLeaveTimeout={300}
                 >
                     <div key="defaultcontroles">
-                        <p><span>este reto aun no se sortea...
-                            <button onClick={this.Sortear}>sortear</button>
+                        <p>
+                            <span>este reto aun no se sortea...&nbsp;
+                            {isAdmin ? <button onClick={this.Sortear}>sortear</button> : null}
                         </span></p>
                     </div>
                 </ReactCSSReplace>
@@ -83,9 +87,9 @@ class Sorteo extends React.Component {
     }
 
     sendSortear() {
-        let pass = _.get(this, "refs.sorteoPassInput.value");
+        const userid = _.get(this, "props.userData.id");
 
-        socketEmit("sortear", {pass: pass});
+        socketEmit("sortear", {userid});
 
         this.resetState()
     }
@@ -95,4 +99,4 @@ class Sorteo extends React.Component {
     }
 }
 
-export default Sorteo;
+export default connect(state => state)(Sorteo);

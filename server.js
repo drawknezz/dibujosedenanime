@@ -129,8 +129,8 @@ const deleteUnexistingCharsFromSorteo = function () {
     });
 };
 
-const sortear = function (pass) {
-    return validatePass(pass).then(() => {
+const sortear = function (userid) {
+    return testForPermissions(userid, "sort").then(() => {
         console.log("sorteando...");
 
         return db.getLastReto().then(reto => {
@@ -151,8 +151,8 @@ const sortear = function (pass) {
     });
 };
 
-const deleteChar = function (id, pass) {
-    return validatePass(pass).then(() => {
+const deleteChar = function (id, userid) {
+    return testForPermissions(userid, "deletechar").then(() => {
         return db.getCharById(id).then(char => {
             console.log(`deleting char ${_.get(char, "name")} (${id})`);
             return db.deleteChar(id).then(function () {
@@ -163,8 +163,8 @@ const deleteChar = function (id, pass) {
     });
 };
 
-const createChar = function (name, serie, pass) {
-    return validatePass(pass).then(() => {
+const createChar = function (name, serie, userid) {
+    return testForPermissions(userid, "createchar").then(() => {
         console.log("creating char ", name);
 
         return db.getLastReto().then(reto => {
@@ -173,8 +173,8 @@ const createChar = function (name, serie, pass) {
     });
 };
 
-const createManyChars = function (chars, pass) {
-    return validatePass(pass).then(() => {
+const createManyChars = function (chars, userid) {
+    return testForPermissions(userid, "createchar").then(() => {
 
         return db.getLastReto().then(reto => {
             console.log("creating chars ", chars);
@@ -195,8 +195,8 @@ const createMember = function (name) {
     });
 };
 
-const deleteMember = function (memberId, pass) {
-    return validatePass(pass).then(() => {
+const deleteMember = function (memberId, userid) {
+    return testForPermissions(userid, "deletemember").then(() => {
         deleteUnexistingMembersFromSorteo();
         deleteUnexistingCharsFromSorteo();
 
@@ -209,8 +209,8 @@ const deleteMember = function (memberId, pass) {
     });
 };
 
-const unassignMember = function (memberId, pass) {
-    return validatePass(pass).then(() => {
+const unassignMember = function (memberId, userid) {
+    return testForPermissions(userid, "unassingmember").then(() => {
         return db.getMemberById(memberId).then(member => {
             console.log(`unasigning member ${_.get(member, "name")} (${memberId})`);
             return deleteSorteoEntryByMember(memberId).then(() => {
@@ -220,8 +220,8 @@ const unassignMember = function (memberId, pass) {
     });
 };
 
-const unassignChar = function (charId, pass) {
-    return validatePass(pass).then(() => {
+const unassignChar = function (charId, userid) {
+    return testForPermissions(userid, "unassignchar").then(() => {
         return db.getCharById(charId).then(char => {
             console.log(`unasigning char ${_.get(char, "name")} (${charId})`);
             return deleteSorteoEntryByChar(charId).then(() => {
@@ -234,8 +234,8 @@ const unassignChar = function (charId, pass) {
 /**
  para asignar un char libre a un miembro
  */
-const assignCharToMember = function (id, pass) {
-    return validatePass(pass).then(() => {
+const assignCharToMember = function (id, userid) {
+    return testForPermissions(userid, "assignchartomember").then(() => {
         return deleteUnexistingMembersFromSorteo()
             .then(() => deleteUnexistingCharsFromSorteo())
             .then(() => {
@@ -272,8 +272,8 @@ const assignCharToMember = function (id, pass) {
 /**
  para asignar un miembro libre a un char
  */
-const assignMemberToChar = function (charId, pass) {
-    return validatePass(pass).then(() => {
+const assignMemberToChar = function (charId, userid) {
+    return testForPermissions(userid, "assignmembertochar").then(() => {
         return db.getLastReto().then(reto => {
             return Promise.props({
                 sorteo: db.getSorteoForReto(_.get(reto, "_id")),
@@ -302,15 +302,15 @@ const assignMemberToChar = function (charId, pass) {
     });
 };
 
-const createReto = function (name, pass) {
-    return validatePass(pass).then(() => {
+const createReto = function (name, userid) {
+    return testForPermissions(userid, "createreto").then(() => {
         console.log(`creating reto ${name}`);
         return db.createReto(name)
     });
 };
 
-const deleteLastReto = function (pass) {
-    return validatePass(pass).then(() => {
+const deleteLastReto = function (userid) {
+    return testForPermissions(userid, "deletereto").then(() => {
         return db.getLastReto().then(reto => {
             console.log(`eliminando reto ${_.get(reto, "name")}`);
             return db.deleteReto(_.get(reto, "_id"));
@@ -318,8 +318,8 @@ const deleteLastReto = function (pass) {
     });
 };
 
-const updateInfoText = function (txt, pass) {
-    return validatePass(pass).then(() => {
+const updateInfoText = function (txt, userid) {
+    return testForPermissions(userid, "updateinfo").then(() => {
         return db.setInfoTxt(txt);
     });
 };
@@ -472,8 +472,8 @@ io.on("connection", function (socket) {
         updateAllClients();
     });
 
-    socket.on("editinfotext", ({txt, pass}) => {
-        updateInfoText(txt, pass).then(resp => {
+    socket.on("editinfotext", ({txt, userid}) => {
+        updateInfoText(txt, userid).then(resp => {
             updateAllClients();
             socket.emit("msg", resp);
         }).catch(err => {
@@ -482,8 +482,8 @@ io.on("connection", function (socket) {
         })
     });
 
-    socket.on("deletelastreto", ({pass}) => {
-        deleteLastReto(pass).then(resp => {
+    socket.on("deletelastreto", ({userid}) => {
+        deleteLastReto(userid).then(resp => {
             updateAllClients();
             socket.emit("msg", resp);
         }).catch(err => {
@@ -492,8 +492,8 @@ io.on("connection", function (socket) {
         })
     });
 
-    socket.on("sortear", ({pass}) => {
-        sortear(pass).then(resp => {
+    socket.on("sortear", ({userid}) => {
+        sortear(userid).then(resp => {
             updateAllClients();
             socket.emit("msg", resp);
         }).catch(err => {
@@ -512,8 +512,8 @@ io.on("connection", function (socket) {
         })
     });
 
-    socket.on("createmanychars", ({chars, pass}) => {
-        createManyChars(chars, pass).then(resp => {
+    socket.on("createmanychars", ({chars, userid}) => {
+        createManyChars(chars, userid).then(resp => {
             updateAllClients();
             socket.emit("msg", resp);
         }).catch(err => {
@@ -522,8 +522,8 @@ io.on("connection", function (socket) {
         })
     });
 
-    socket.on("createchar", ({name, serie, pass}) => {
-        createChar(name, serie, pass).then(resp => {
+    socket.on("createchar", ({name, serie, userid}) => {
+        createChar(name, serie, userid).then(resp => {
             updateAllClients();
             socket.emit("msg", resp);
         }).catch(err => {
@@ -532,8 +532,8 @@ io.on("connection", function (socket) {
         })
     });
 
-    socket.on("deletechar", ({id, pass}) => {
-        deleteChar(id, pass).then(resp => {
+    socket.on("deletechar", ({id, userid}) => {
+        deleteChar(id, userid).then(resp => {
             updateAllClients();
             socket.emit("msg", resp);
         }).catch(err => {
@@ -542,8 +542,8 @@ io.on("connection", function (socket) {
         })
     });
 
-    socket.on("assignchartomember", ({id, pass}) => {
-        assignCharToMember(id, pass).then(resp => {
+    socket.on("assignchartomember", ({id, userid}) => {
+        assignCharToMember(id, userid).then(resp => {
             updateAllClients();
             socket.emit("msg", resp);
         }).catch(err => {
@@ -552,8 +552,8 @@ io.on("connection", function (socket) {
         })
     });
 
-    socket.on("deletemember", ({id, pass}) => {
-        deleteMember(id, pass).then(resp => {
+    socket.on("deletemember", ({id, userid}) => {
+        deleteMember(id, userid).then(resp => {
             updateAllClients();
             socket.emit("msg", resp);
         }).catch(err => {
@@ -562,8 +562,8 @@ io.on("connection", function (socket) {
         })
     });
 
-    socket.on("createreto", ({name, pass}) => {
-        createReto(name, pass).then(resp => {
+    socket.on("createreto", ({name, userid}) => {
+        createReto(name, userid).then(resp => {
             updateAllClients();
             socket.emit("msg", resp);
         }).catch(err => {
@@ -572,8 +572,8 @@ io.on("connection", function (socket) {
         })
     });
 
-    socket.on("unassignmember", ({id, pass}) => {
-        unassignMember(id, pass).then(resp => {
+    socket.on("unassignmember", ({id, userid}) => {
+        unassignMember(id, userid).then(resp => {
             updateAllClients();
             socket.emit("msg", resp);
         }).catch(err => {
@@ -583,8 +583,8 @@ io.on("connection", function (socket) {
         })
     });
 
-    socket.on("unassignchar", ({id, pass}) => {
-        unassignChar(id, pass).then(resp => {
+    socket.on("unassignchar", ({id, userid}) => {
+        unassignChar(id, userid).then(resp => {
             updateAllClients();
             socket.emit("msg", resp);
         }).catch(err => {
@@ -593,8 +593,8 @@ io.on("connection", function (socket) {
         })
     });
 
-    socket.on("assignmembertochar", ({id, pass}) => {
-        assignMemberToChar(id, pass).then(resp => {
+    socket.on("assignmembertochar", ({id, userid}) => {
+        assignMemberToChar(id, userid).then(resp => {
             updateAllClients();
             socket.emit("msg", resp);
         }).catch(err => {

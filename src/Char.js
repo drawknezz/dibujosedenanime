@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import _ from './mixins';
 import {socketEmit} from './api';
+import {connect} from 'react-redux';
 
 class Char extends Component {
     constructor() {
@@ -15,10 +16,12 @@ class Char extends Component {
         let name = this.props.name;
         let serie = this.props.serie;
         let member = this.props.member;
-        let closeBtn = <img src="/close.svg" alt="eliminar" onClick={this.deleting}/>;
+        let isAdmin = _.includes(_.get(this, "props.userData.permissions"), "any");
+        let closeBtn = isAdmin ? <img src="/close.svg" alt="eliminar" onClick={this.deleting}/> : null;
 
         return _.ruleMatch({
-            s: _.get(this, "state.status")
+            s: _.get(this, "state.status"),
+            admin: isAdmin
         }, [
             {
                 s: "asignando",
@@ -63,14 +66,26 @@ class Char extends Component {
             },
 
             {
+                admin: Boolean,
                 returns: (
                     <div className={"char " + (member ? "asignado" : "")}>
                         {_.assertSelf(this.props.dis, null, closeBtn)}
                         <p className="charName"><span><strong>{name}</strong></span></p>
                         <p className="serieName"><span>{serie}</span></p>
                         <p className="assignedMember"><span>asignado a: {member ?
-                            <span>{member} <a onClick={this.unassigning}>desasignar</a></span> :
-                            <a onClick={this.assigning}>asignar al azar</a>}</span></p>
+                            <span>{member} <a onClick={this.unassign}>desasignar</a></span> :
+                            <a onClick={this.assignRandom}>asignar al azar</a>}</span></p>
+                    </div>
+                )
+            },
+
+            {
+                returns: (
+                    <div className={"char " + (member ? "asignado" : "")}>
+                        {_.assertSelf(this.props.dis, null, closeBtn)}
+                        <p className="charName"><span><strong>{name}</strong></span></p>
+                        <p className="serieName"><span>{serie}</span></p>
+                        <p className="assignedMember"><span>asignado a: {member}</span></p>
                     </div>
                 )
             }
@@ -83,9 +98,9 @@ class Char extends Component {
 
     deleteChar() {
         let id = this.props.id;
-        let pass = _.get(this, "refs.claveInput.value");
+        const userid = _.get(this, "props.userData.id");
 
-        socketEmit("deletechar", {id: id, pass: pass});
+        socketEmit("deletechar", {id: id, userid});
 
         this.resetState();
     }
@@ -96,9 +111,9 @@ class Char extends Component {
 
     assignRandom() {
         let id = _.get(this, "props.id");
-        let clave = _.get(this, "refs.claveInput.value");
+        const userid = _.get(this, "props.userData.id");
 
-        socketEmit("assignmembertochar", {id: id, pass: clave});
+        socketEmit("assignmembertochar", {id: id, userid});
 
         this.resetState();
     }
@@ -109,9 +124,9 @@ class Char extends Component {
 
     unassign() {
         let id = this.props.id;
-        let clave = _.get(this, "refs.claveInput.value");
+        const userid = _.get(this, "props.userData.id");
 
-        socketEmit("unassignchar", {id: id, pass: clave});
+        socketEmit("unassignchar", {id: id, userid});
 
         this.resetState();
     }
@@ -121,4 +136,4 @@ class Char extends Component {
     }
 }
 
-export default Char;
+export default connect(state => state)(Char);
