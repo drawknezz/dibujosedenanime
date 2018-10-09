@@ -29,11 +29,13 @@ class Poll extends React.Component {
                 <div className="meter">
                     <span style={{width: `${_.get(entry, "votes.length", 1) * 100 / higherVotes}%`}}/>
                 </div>
-                <div className="entrybtns">
-                    {pollActive &&
-                    <a onClick={this.voteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>👍</a>}&nbsp;
-                    {pollActive && isAdmin && <a onClick={this.deleteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>⛔</a>}
-                </div>
+                {pollActive ?
+                    <div className="entrybtns">
+                        {pollActive &&
+                        <a onClick={this.voteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>👍</a>}&nbsp;
+                        {pollActive && isAdmin && <a onClick={this.deleteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>⛔</a>}
+                    </div>
+                :null}
 
             </div>)
             .value();
