@@ -82,11 +82,11 @@ class Poll extends React.Component {
                         {usernamesdom}
                         <div className="entries">{
                             [entriesdom, pollActive ? null : <div key="entriesrest">
-                                <p className="hiddenEntries"><i>{_.ruleMatch({e: entries}, [
-                                    {"e.length": _.rd(_.partial(_.lte, _, 1), "menor o igual a 1"), returns: null},
-                                    {"e.length": 2, returns: "mas una otra opcion"},
-                                    {returns: `mas ${entries.length - 1} otras opciones`},
-                                ], null, null, {log:true})}</i></p>
+                                <p className="hiddenEntries">
+                                    <i>{_.chain(entries).tail().map(e => {
+                                        return `${e.name} (${_.get(e, "votes.length")})`
+                                    }).join(", ").value()}</i>
+                                </p>
                             </div>]
                         }</div>
                         <p>
