@@ -22,7 +22,17 @@ _.mixin({
      * @return {*}
      */
     applyBound: function(ctx, fnName, args) {
-        return !!ctx && _.isFunction(_.get(ctx, fnName)) ? ctx[fnName].apply(ctx, _.isArray(args) ? args : []) : null;
+        return !!ctx && _.isFunction(_.get(ctx, fnName)) ? _.get(ctx, fnName).apply(ctx, _.isArray(args) ? args : []) : null;
+    },
+
+    /**
+     * Devuelve descripcion de evaluacion para ruleMatch
+     * @param ev
+     * @param desc
+     * @returns {{_ev: *, _desc: *}}
+     */
+    rd: function (ev, desc) {
+        return {_ev: ev, _desc: desc};
     },
 
     /**
@@ -87,12 +97,12 @@ _.mixin({
         rulesSet = _.assert(rulesSet, _.isArray, rulesSet, [rulesSet]);
         var shouldLog = _.get(_.conf(), "debug") || _.get(ops, "log");
         var lvl = _.get(ops, "lvl", 0);
-        var logIndentation = _.repeat("\u00b7\t", +lvl);
+        var logIndentation = _.repeat("\u00b7   ", +lvl);
 
         var getSubcallOps = function(subDesc, extraOps) {
             return _.extend({}, ops, {
                 lvl: lvl + 1,
-                logDesc: _.get(ops, "logDesc", "1") + (subDesc ? "." + subDesc : "")
+                logDesc: _.get(ops, "logDesc", "") + (subDesc ? "." + subDesc : "")
             }, extraOps);
         };
 
@@ -117,19 +127,12 @@ _.mixin({
             .find(function(rule, ruleIdx) {
                 var keys = _.chain(rule).keys().reject(_.partial(_.eq, "returns", _)).reject(_.partial(_.eq, "_ruleDesc_", _)).value();
 
-                var evaluateKey = function(evProp, ruleValue) {
-                    var evs = [
-                        { ev: _.isFunction, r: ruleValue },
-                        { ev: _.isArray, r: _.curry(_.includes, 2)(ruleValue) },
-                        { ev: _.isRegExp, r: RegExp.prototype.test.bind(ruleValue) },
-                        { r: _.curry(_.isEqual, 2)(ruleValue) }
-                    ];
-
-                    return _.chain(evs).find(function(e) {
-                        return _.get(e, "ev") ? e.ev(ruleValue) : true;
-                    }).thru(function(rl) {
-                        return rl.r(evProp);
-                    }).value();
+                var evaluateKey = function (o, ev) {
+                    if (_.hasAll(ev, "_ev", "_desc")) {
+                        return _.assert(o, _.get(ev, "_ev"), true, false);
+                    } else {
+                        return _.assert(o, ev, true, false);
+                    }
                 };
 
                 if (shouldLog) {
@@ -160,7 +163,11 @@ _.mixin({
                             return evaluateKey(objPropValue, rulePropValue, key);
                         }).tap(function(val) {
                             if (shouldLog) {
-                                _.attemptBound(console, "log", logIndentation + "\tkey", key, "evals", rulePropValue, " --> ", val);
+                                if (_.has(obj, key)) {
+                                    _.attemptBound(console, "log", logIndentation + "\u00b7   key", key, "(", objPropValue, ") evals \"", _.get(rulePropValue, "_desc", rulePropValue), "\" --> ", val);
+                                } else {
+                                    _.attemptBound(console, "log", logIndentation + "\u00b7   ", "_rule_" + _.getD(ops, "logDesc", ".0") + "." + key + " evals --> ", val);
+                                }
                             }
                         })
                         .value();
@@ -175,7 +182,7 @@ _.mixin({
 
         var returnVal = _.has(match, "returns") ? match.returns : (match && defReturns);
 
-        if (shouldLog && _.eq(lvl, 0) && returnVal) {
+        if (shouldLog && _.eq(lvl, 0) && _.isDefined(match)) {
             console.log(logIndentation + " %cReturning ---> ", "color: yellow", returnVal);
         }
 
@@ -236,7 +243,23 @@ _.mixin({
      * @return {*}
      */
     assert: function(o, ev, t, f) {
-        var r = _.isFunction(ev) ? ev(o) : Boolean(ev);
+        var evaluateKey = function (evProp, ruleValue) {
+            var evs = [
+                {ev: _.isFunction, r: ruleValue},
+                {ev: _.isArray, r: _.curry(_.includes, 2)(ruleValue)},
+                {ev: _.isRegExp, r: RegExp.prototype.test.bind(ruleValue)},
+                {ev: _.isBoolean, r: _.flow(Boolean, _.partial(_.eq, ev, _))},
+                {r: _.curry(_.isEqual, 2)(ruleValue)}
+            ];
+
+            return _.chain(evs).find(function (e) {
+                return _.get(e, "ev") ? e.ev(ruleValue) : true;
+            }).thru(function (rl) {
+                return rl.r(evProp);
+            }).value();
+        };
+
+        var r = evaluateKey(o, ev);
         return r ? (_.isFunction(t) ? t(o) : t) : (_.isFunction(f) ? f(o) : f);
     },
     /**
@@ -285,9 +308,22 @@ _.mixin({
      * @return {boolean}
      */
     hasAll: function(o) {
-        var keys = _.chain(arguments).toArray().rest().flatten().value();
+        var keys = _.chain(arguments).toArray().tail().flatten().value();
         var r = _.every(keys, function(k) { return _.has(o, k); });
         return r;
+    },
+
+    /**
+     * Evalúa si el Objeto (o) tiene todas las propiedades especificadas desde el segundo en adelante y que el valor
+     * de dichas propiedades esté definido (no sea null ni undefined)
+     * @param {Object} o
+     * @return {boolean}
+     */
+    hasAllDefined: function (o) {
+        var keys = _.chain(arguments).toArray().tail().flatten().value();
+        return _.every(keys, function (k) {
+            return _.has(o, k) && _.isDefined(_.get(o, k));
+        });
     },
 
     /**
@@ -384,6 +420,33 @@ _.mixin({
         return _.chain(data).transform(function(res, val, key, obj) {
             _.set(res, key, getSet(_.extend({}, obj, res), key));
         }).mapValues("val").value();
+    },
+
+    between: function (val, lowerBound, upperBound, includesLower, includesUpper) {
+        var lowerEval = includesLower ? _.gte : _.gt;
+        var upperEval = includesUpper ? _.lte : _.lt;
+
+        return lowerEval(val, lowerBound) && upperEval(val, upperBound);
+    },
+
+    fillPlaceholders: function (string, _placeholders, options) {
+        if (!string) {
+            return "";
+        }
+
+        var delimiters = _.chain(options).get("delimiters").assert(_.isArray, _.identity, null).value() || ["<<", ">>"];
+
+        delimiters = _.map(delimiters, function (del) {
+            return del.replace(/([*$?|\[\]}])/ig, "\\$1");
+        });
+
+        var placeholders = _.extend({self: _placeholders}, _placeholders);
+
+        var res = string;
+        _(placeholders).keys().each(function (key) {
+            res = res.replace(new RegExp(delimiters[0] + "\s*" + key + "\s*" + delimiters[1], "ig"), placeholders[key]);
+        }).value();
+        return res.replace(new RegExp(delimiters[0] + "[^" + delimiters.join("") + "]*" + delimiters[1], "ig"), "");
     },
 
     /**
@@ -485,6 +548,20 @@ _.mixin({
       }
       
       return 2 * intersections / (left.length + rightLength)
+    },
+
+    concatAll: function () {
+        var args = _.chain(arguments).toArray().flatten().value();
+
+        return [].concat(args);
+    },
+
+    rejectAll: function (arr) {
+        var args = _.chain(arguments).toArray().tail().value();
+
+        return _.reject(arr, function (val) {
+            return _.includes(args, val);
+        });
     }
 });
 

@@ -9,8 +9,8 @@ _.mixin({
      * @param {...*}
      * @return {*}
      */
-    attemptBound: function(ctx, fnName) {
-        return !!ctx && _.isFunction(_.get(ctx, fnName)) ? ctx[fnName].apply(ctx, _.slice(arguments, 2)) : null;
+    attemptBound: function (ctx, fnName) {
+        return !!ctx && _.isFunction(_.get(ctx, fnName)) ? _.get(ctx, fnName).apply(ctx, Array.slice(arguments, 2)) : null;
     },
     /**
      * Llama a la funcion fnName usando el contexto ctx. Si fnName no es una función, o si ctx es falsy, retorna null.
@@ -21,8 +21,18 @@ _.mixin({
      * @param {Array} args
      * @return {*}
      */
-    applyBound: function(ctx, fnName, args) {
-        return !!ctx && _.isFunction(_.get(ctx, fnName)) ? ctx[fnName].apply(ctx, _.isArray(args) ? args : []) : null;
+    applyBound: function (ctx, fnName, args) {
+        return !!ctx && _.isFunction(_.get(ctx, fnName)) ? _.get(ctx, fnName).apply(ctx, _.isArray(args) ? args : []) : null;
+    },
+
+    /**
+     * Devuelve descripcion de evaluacion para ruleMatch
+     * @param ev
+     * @param desc
+     * @returns {{_ev: *, _desc: *}}
+     */
+    rd: function (ev, desc) {
+        return {_ev: ev, _desc: desc};
     },
 
     /**
@@ -83,22 +93,22 @@ _.mixin({
      * @param {*} defReturns
      * @return {*}
      */
-    ruleMatch: function(obj, rulesSet, defResult, defReturns, ops) {
+    ruleMatch: function (obj, rulesSet, defResult, defReturns, ops) {
         rulesSet = _.assert(rulesSet, _.isArray, rulesSet, [rulesSet]);
         var shouldLog = _.get(_.conf(), "debug") || _.get(ops, "log");
         var lvl = _.get(ops, "lvl", 0);
-        var logIndentation = _.repeat("\u00b7\t", +lvl);
+        var logIndentation = _.repeat("\u00b7   ", +lvl);
 
-        var getSubcallOps = function(subDesc, extraOps) {
+        var getSubcallOps = function (subDesc, extraOps) {
             return _.extend({}, ops, {
                 lvl: lvl + 1,
-                logDesc: _.get(ops, "logDesc", "1") + (subDesc ? "." + subDesc : "")
+                logDesc: _.get(ops, "logDesc", "") + (subDesc ? "." + subDesc : "")
             }, extraOps);
         };
 
-        var mapInners = function(rule, ruleIndex, rules, innerOps) {
+        var mapInners = function (rule, ruleIndex, rules, innerOps) {
             return [
-                _.chain(rule).get("$inner").ensureArray().compact().map(function(innerRule, innerIndex) {
+                _.chain(rule).get("$inner").ensureArray().compact().map(function (innerRule, innerIndex) {
                     if (_.has(innerRule, "$inner")) {
                         return mapInners(_.extend({}, _.omit(rule, "$inner"), innerRule), innerIndex, rule, {prevDesc: ruleIndex + ".inner"});
                     } else {
@@ -114,53 +124,50 @@ _.mixin({
         var match = _.chain(rulesSet)
             .map(mapInners)
             .flattenDeep()
-            .find(function(rule, ruleIdx) {
+            .find(function (rule, ruleIdx) {
                 var keys = _.chain(rule).keys().reject(_.partial(_.eq, "returns", _)).reject(_.partial(_.eq, "_ruleDesc_", _)).value();
 
-                var evaluateKey = function(evProp, ruleValue) {
-                    var evs = [
-                        { ev: _.isFunction, r: ruleValue },
-                        { ev: _.isArray, r: _.curry(_.includes, 2)(ruleValue) },
-                        { ev: _.isRegExp, r: RegExp.prototype.test.bind(ruleValue) },
-                        { r: _.curry(_.isEqual, 2)(ruleValue) }
-                    ];
-
-                    return _.chain(evs).find(function(e) {
-                        return _.get(e, "ev") ? e.ev(ruleValue) : true;
-                    }).thru(function(rl) {
-                        return rl.r(evProp);
-                    }).value();
+                var evaluateKey = function (o, ev) {
+                    if (_.hasAll(ev, "_ev", "_desc")) {
+                        return _.assert(o, _.get(ev, "_ev"), true, false);
+                    } else {
+                        return _.assert(o, ev, true, false);
+                    }
                 };
 
                 if (shouldLog) {
                     _.attemptBound(console, "log", logIndentation + "_rule_" + _.get(ops, "logDesc", "") + "." + _.get(rule, "_ruleDesc_", ""));
                 }
 
-                var keyRetVal = _.every(keys, function(key) {
+                var keyRetVal = _.every(keys, function (key) {
                     var rulePropValue = _.get(rule, key);
                     var objPropValue = _.get(obj, key);
                     return _.chain({
-                            $or: _.partial(_.some, _.ensureArray(rulePropValue), function(subRule, subIndex) {
-                                return _.ruleMatch(obj, _.extend({}, subRule, {_ruleDesc_: _.get(rule, "_ruleDesc_") + ".$or." + subIndex}), null, true, getSubcallOps("", {overrideRIndex: subIndex}));
-                            }),
-                            $and: _.partial(_.every, _.ensureArray(rulePropValue), function(subRule, subIndex) {
-                                return _.ruleMatch(obj, subRule, null, true, getSubcallOps((ruleIdx + 1) + ".$and", {overrideRIndex: subIndex}));
-                            }),
-                            $not: _.partial(_.every,
-                                _.ensureArray(rulePropValue),
-                                _.negate(function(subRule, subIndex) {
-                                    return _.ruleMatch(obj, subRule, null, true, getSubcallOps((ruleIdx + 1) + ".$not", {overrideRIndex: subIndex}));
-                                })
-                            )
-                        })
+                        $or: _.partial(_.some, _.ensureArray(rulePropValue), function (subRule, subIndex) {
+                            return _.ruleMatch(obj, _.extend({}, subRule, {_ruleDesc_: _.get(rule, "_ruleDesc_") + ".$or." + subIndex}), null, true, getSubcallOps("", {overrideRIndex: subIndex}));
+                        }),
+                        $and: _.partial(_.every, _.ensureArray(rulePropValue), function (subRule, subIndex) {
+                            return _.ruleMatch(obj, subRule, null, true, getSubcallOps((ruleIdx + 1) + ".$and", {overrideRIndex: subIndex}));
+                        }),
+                        $not: _.partial(_.every,
+                            _.ensureArray(rulePropValue),
+                            _.negate(function (subRule, subIndex) {
+                                return _.ruleMatch(obj, subRule, null, true, getSubcallOps((ruleIdx + 1) + ".$not", {overrideRIndex: subIndex}));
+                            })
+                        )
+                    })
                         .get(key)
-                        .assert(_.isFunction, function(fn) {
+                        .assert(_.isFunction, function (fn) {
                             return fn();
-                        }, function() {
+                        }, function () {
                             return evaluateKey(objPropValue, rulePropValue, key);
-                        }).tap(function(val) {
+                        }).tap(function (val) {
                             if (shouldLog) {
-                                _.attemptBound(console, "log", logIndentation + "\tkey", key, "evals", rulePropValue, " --> ", val);
+                                if (_.has(obj, key)) {
+                                    _.attemptBound(console, "log", logIndentation + "\u00b7   key", key, "(", objPropValue, ") evals \"", _.get(rulePropValue, "_desc", rulePropValue), "\" --> ", val);
+                                } else {
+                                    _.attemptBound(console, "log", logIndentation + "\u00b7   ", "_rule_" + _.getD(ops, "logDesc", ".0") + "." + key + " evals --> ", val);
+                                }
                             }
                         })
                         .value();
@@ -175,7 +182,7 @@ _.mixin({
 
         var returnVal = _.has(match, "returns") ? match.returns : (match && defReturns);
 
-        if (shouldLog && _.eq(lvl, 0) && returnVal) {
+        if (shouldLog && _.eq(lvl, 0) && _.isDefined(match)) {
             console.log(logIndentation + " %cReturning ---> ", "color: yellow", returnVal);
         }
 
@@ -186,15 +193,17 @@ _.mixin({
      * @param obj
      * @returns {Array}
      */
-    ensureArray: function(obj) {
+    ensureArray: function (obj) {
         return _.assert(obj, _.isArray, obj, [obj]);
     },
     /**
      * Evalua el primer argumento contra el resto, si se especifican y son funciones, y devuelve true si todos devuelven true
      * @param {*} e
      */
-    matchSelf: function(e) {
-        return _.chain(arguments).toArray().result("slice", 1).filter(_.isFunction).map(function(f) {return f(e);}).all().value();
+    matchSelf: function (e) {
+        return _.chain(arguments).toArray().result("slice", 1).filter(_.isFunction).map(function (f) {
+            return f(e);
+        }).all().value();
     },
     /**
      * Extrae de la lista de objetos (a) las propiedades especificadas. (Aplica "pick" en cada uno y devuelve una nueva lista con los resultados)
@@ -203,9 +212,9 @@ _.mixin({
      * @param {...String}
      * @returns {Array}
      */
-    extract: function(a) {
+    extract: function (a) {
         var props = _.chain(arguments).toArray().result("slice", 1).flatten().value();
-        return _.map(a, function(o) {
+        return _.map(a, function (o) {
             return _.pick(o, props);
         });
     },
@@ -216,10 +225,10 @@ _.mixin({
      * @params {...String}
      * @returns {Object}
      */
-    sumProps: function(arr) {
+    sumProps: function (arr) {
         var props = _.chain(arguments).toArray().result("slice", 1).flatten().value();
-        return _.chain(arr).extract(props).reduce(function(c, n) {
-            return _.merge(c, n, function(a, b) {
+        return _.chain(arr).extract(props).reduce(function (c, n) {
+            return _.merge(c, n, function (a, b) {
                 return a + b;
             }, {});
         }).value();
@@ -235,8 +244,24 @@ _.mixin({
      * @param {*} f
      * @return {*}
      */
-    assert: function(o, ev, t, f) {
-        var r = _.isFunction(ev) ? ev(o) : Boolean(ev);
+    assert: function (o, ev, t, f) {
+        var evaluateKey = function (evProp, ruleValue) {
+            var evs = [
+                {ev: _.isFunction, r: ruleValue},
+                {ev: _.isArray, r: _.curry(_.includes, 2)(ruleValue)},
+                {ev: _.isRegExp, r: RegExp.prototype.test.bind(ruleValue)},
+                {ev: _.isBoolean, r: _.flow(Boolean, _.partial(_.eq, ev, _))},
+                {r: _.curry(_.isEqual, 2)(ruleValue)}
+            ];
+
+            return _.chain(evs).find(function (e) {
+                return _.get(e, "ev") ? e.ev(ruleValue) : true;
+            }).thru(function (rl) {
+                return rl.r(evProp);
+            }).value();
+        };
+
+        var r = evaluateKey(o, ev);
         return r ? (_.isFunction(t) ? t(o) : t) : (_.isFunction(f) ? f(o) : f);
     },
     /**
@@ -246,7 +271,7 @@ _.mixin({
      * @param {*} f
      * @return {*}
      */
-    assertSelf: function(o, t, f) {
+    assertSelf: function (o, t, f) {
         return _.assert(o, _.identity, t, f);
     },
     /**
@@ -256,7 +281,7 @@ _.mixin({
      * @param def
      * @returns {*}
      */
-    getD: function(o, p, def) {
+    getD: function (o, p, def) {
         var g = _.get(o, p);
         return _.ruleMatch({
             get: g
@@ -275,7 +300,7 @@ _.mixin({
      * cadenas de evaluaciones de este estilo: val1 ||& val2 || valn. Donde se espera que el primero
      * truthy sea el que se asigne a la expresión.
      */
-    dflt: function() {
+    dflt: function () {
         var args = _.toArray(arguments);
         return _.find(args, Boolean) || _.last(args);
     },
@@ -284,10 +309,25 @@ _.mixin({
      * @param {Object} o
      * @return {boolean}
      */
-    hasAll: function(o) {
+    hasAll: function (o) {
         var keys = _.chain(arguments).toArray().rest().flatten().value();
-        var r = _.every(keys, function(k) { return _.has(o, k); });
+        var r = _.every(keys, function (k) {
+            return _.has(o, k);
+        });
         return r;
+    },
+
+    /**
+     * Evalúa si el Objeto (o) tiene todas las propiedades especificadas desde el segundo en adelante y que el valor
+     * de dichas propiedades esté definido (no sea null ni undefined)
+     * @param {Object} o
+     * @return {boolean}
+     */
+    hasAllDefined: function (o) {
+        var keys = _.chain(arguments).toArray().rest().flatten().value();
+        return _.every(keys, function (k) {
+            return _.has(o, k) && _.isDefined(_.get(o, k));
+        });
     },
 
     /**
@@ -295,7 +335,7 @@ _.mixin({
      * @param obj
      * @return {boolean}
      */
-    isDefined: function(obj) {
+    isDefined: function (obj) {
         return !_.isUndefined(obj) && !_.isNull(obj);
     },
 
@@ -304,7 +344,7 @@ _.mixin({
      * @param obj
      * @returns {boolean}
      */
-    neg: function(obj) {
+    neg: function (obj) {
         return !Boolean(obj);
     },
 
@@ -315,54 +355,60 @@ _.mixin({
      * @param {Object} obj
      * @return {Array}
      */
-    rxGroups: function(obj) {
+    rxGroups: function (obj) {
         var args = _.chain(arguments).toArray().flatten().value();
 
         return _.ruleMatch(args, [
             {
                 $or: [
-                    { $and: [
-                        {length: 2},
-                        {$or: [
-                            { 0: _.negate(_.isDefined) },
-                            { 1: _.negate(_.isDefined) }
-                        ]}
-                    ] },
-                    { $and: [
-                        {length: 3},
-                        { 0: _.negate(_.isDefined) },
-                        { 1: _.negate(_.isDefined) },
-                        { 2: _.negate(_.isDefined) }
-                    ] }
+                    {
+                        $and: [
+                            {length: 2},
+                            {
+                                $or: [
+                                    {0: _.negate(_.isDefined)},
+                                    {1: _.negate(_.isDefined)}
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        $and: [
+                            {length: 3},
+                            {0: _.negate(_.isDefined)},
+                            {1: _.negate(_.isDefined)},
+                            {2: _.negate(_.isDefined)}
+                        ]
+                    }
                 ],
-                returns: function() {
+                returns: function () {
                     return null;
                 }
             },
             {
                 length: 2,
-                returns: function() {
+                returns: function () {
                     return _.toArray(String.prototype.match.call(obj, args[1]));
                 }
             },
             {
                 length: 3,
-                returns: function() {
+                returns: function () {
                     var val = _.get(obj, args[1]);
                     return val ? _.toArray(String.prototype.match.call(val, args[2])) : null;
                 }
             },
             {
-                returns: function() {
+                returns: function () {
                     throw new Error("incorrect number of arguments.");
                 }
             }
         ])();
     },
 
-    resolve: function(data) {
+    resolve: function (data) {
 
-        var getSet = function(obj, prop) {
+        var getSet = function (obj, prop) {
             var value = _.get(obj, prop);
             var deps = _.get(value, "deps");
 
@@ -370,20 +416,47 @@ _.mixin({
                 return _.extend({}, value, {val: _.get(value, "val")});
             } else {
                 return _.extend({}, value, {
-                    val: _.applyBound(value, "setter", _.chain(deps).map(function(dep) {
+                    val: _.applyBound(value, "setter", _.chain(deps).map(function (dep) {
                         var res = {};
                         _.set(res, dep, getSet(obj, dep));
                         return res;
-                    }).reduce(function(a,b) {
+                    }).reduce(function (a, b) {
                         return _.extend({}, a, b);
                     }, {}).map("val").value())
                 });
             }
         };
 
-        return _.chain(data).transform(function(res, val, key, obj) {
+        return _.chain(data).transform(function (res, val, key, obj) {
             _.set(res, key, getSet(_.extend({}, obj, res), key));
         }).mapValues("val").value();
+    },
+
+    between: function (val, lowerBound, upperBound, includesLower, includesUpper) {
+        var lowerEval = includesLower ? _.gte : _.gt;
+        var upperEval = includesUpper ? _.lte : _.lt;
+
+        return lowerEval(val, lowerBound) && upperEval(val, upperBound);
+    },
+
+    fillPlaceholders: function (string, _placeholders, options) {
+        if (!string) {
+            return "";
+        }
+
+        var delimiters = _.chain(options).get("delimiters").assert(_.isArray, _.identity, null).value() || ["<<", ">>"];
+
+        delimiters = _.map(delimiters, function (del) {
+            return del.replace(/([*$?|\[\]}])/ig, "\\$1");
+        });
+
+        var placeholders = _.extend({self: _placeholders}, _placeholders);
+
+        var res = string;
+        _(placeholders).keys().each(function (key) {
+            res = res.replace(new RegExp(delimiters[0] + "\s*" + key + "\s*" + delimiters[1], "ig"), placeholders[key]);
+        }).value();
+        return res.replace(new RegExp(delimiters[0] + "[^" + delimiters.join("") + "]*" + delimiters[1], "ig"), "");
     },
 
     /**
@@ -399,24 +472,24 @@ _.mixin({
      * _.conf.clear()({a: 2}) --> reemplaza lo que haya con {a: 2}
      *
      */
-    conf: (function() {
-        var dflt = { debug: false };
+    conf: (function () {
+        var dflt = {debug: false};
         var config = _.extend({}, dflt);
 
-        var set = function(confs) {
+        var set = function (confs) {
             _.assertSelf(confs, _.curry(_.extend, 2)(config));
             return config;
         };
 
-        _.set(set, "_default", function(df) {
+        _.set(set, "_default", function (df) {
             dflt = _.extend({}, df);
             return set;
         });
-        _.set(set, "default", function() {
+        _.set(set, "default", function () {
             config = _.extend({}, dflt);
             return set;
         });
-        _.set(set, "clear", function() {
+        _.set(set, "clear", function () {
             config = {};
             return set;
         });
@@ -424,8 +497,60 @@ _.mixin({
         return set;
     })(),
 
-    ng: function() {
+    ng: function () {
         return _.negate.apply(this, _.chain(arguments).toArray().flatten().value());
+    },
+
+    repReg: function (str, reg, rep) {
+        return reg.test(str) ? _.repReg(str.replace(reg, rep), reg, rep) : str;
+    },
+
+    regFromStr: function (reg) {
+        return new RegExp(_.repReg(reg, /\(\?<[^>]+>([^)]+)\)/, "($1)"));
+    },
+
+    regGroups: function (str, reg) {
+        var names = _.map(reg.match(/<([^>]+)>/g), function (a) {
+            return a.replace(/(<|>)/g, "");
+        });
+        var groups = _.tail(str.match(_.regFromStr(reg)));
+        return _.zipObject(names, groups);
+    },
+
+    regexRules: function (str, rules, def) {
+        return _.ruleMatch(
+            {str: str},
+            _.concat(
+                _.map(rules, function (r) {
+                    return {
+                        str: _.regFromStr(_.get(r, "reg")),
+                        returns: _.flow(
+                            _.partial(_.regGroups, _, _.get(r, "reg")),
+                            _.get(r, "ev")
+                        )
+                    };
+                }),
+                [{
+                    returns: function () {
+                        return def || "";
+                    }
+                }]
+            )
+        )(str);
+    },
+
+    concatAll: function () {
+        var args = _.chain(arguments).toArray().flatten().value();
+
+        return [].concat(args);
+    },
+
+    rejectAll: function (arr) {
+        var args = _.chain(arguments).toArray().rest().value();
+
+        return _.reject(arr, function (val) {
+            return _.includes(args, val);
+        });
     }
 });
 

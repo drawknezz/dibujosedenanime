@@ -5,6 +5,11 @@
     margin: 10px;
 }
 
+.poll.closed {
+    background-color: rgb(211, 192, 198);
+    opacity: 0.6;
+}
+
 .poll p {
     margin: 0;
 }
@@ -19,6 +24,10 @@
 
 .entries {
     margin: 10px 0;
+}
+
+.hiddenEntries {
+    font-size: 12px;
 }
 
 .entry {

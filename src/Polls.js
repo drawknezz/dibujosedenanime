@@ -19,6 +19,10 @@ class Polls extends React.Component {
     render() {
         let status = this.state.status;
         let isAdmin = _.includes(_.get(this, "props.userData.permissions"), "any");
+        let polls = _.chain(this).get("props.polls").sortBy("status").map(poll => {
+            return <Poll key={_.get(poll, "_id")} poll={poll}
+                         loginData={_.get(this, "props.loginData")}/>
+        }).value();
 
         return _.ruleMatch({
             s: status,
@@ -44,10 +48,7 @@ class Polls extends React.Component {
                         {isAdmin && <p><span><button onClick={this.creatingPoll}>crear nueva votacion</button></span>
                         </p>}
                         <div className="pollslist">{
-                            _.chain(this).get("props.polls").map(poll => {
-                                return <Poll key={_.get(poll, "_id")} poll={poll}
-                                             loginData={_.get(this, "props.loginData")}/>
-                            }).value()
+                            polls
                         }</div>
                     </div>
                 </div>,
@@ -61,10 +62,7 @@ class Polls extends React.Component {
                             <button onClick={this.createPoll} disabled={_.get(this, "state.invalidInput", true)}>crear nueva votacion</button>
                         </span></p>
                         <div className="pollslist">{
-                            _.chain(this).get("props.polls").map(poll => {
-                                return <Poll key={_.get(poll, "_id")} poll={poll}
-                                             loginData={_.get(this, "props.loginData")}/>
-                            }).value()
+                            polls
                         }</div>
                     </div>
                 </div>,

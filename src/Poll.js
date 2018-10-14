@@ -24,20 +24,22 @@ class Poll extends React.Component {
 
         const pollActive = _.get(this, "props.poll.status") !== "closed";
         const entriesdom = _.chain(entries)
-            .map(entry => <div className="entry" key={_.get(entry, "_id")}>
-                <span className="entryname"><strong>{_.get(entry, "name")}</strong></span>
-                <div className="meter">
-                    <span style={{width: `${_.get(entry, "votes.length", 1) * 100 / higherVotes}%`}}/>
-                </div>
-                {pollActive ?
-                    <div className="entrybtns">
-                        {pollActive &&
-                        <a onClick={this.voteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>👍</a>}&nbsp;
-                        {pollActive && isAdmin && <a onClick={this.deleteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>⛔</a>}
+            .assert(pollActive, _.identity, _.first)
+            .ensureArray()
+            .map(entry =>
+                <div className="entry" key={_.get(entry, "_id")}>
+                    <span className="entryname"><strong>{_.get(entry, "name")}</strong></span>
+                    <div className="meter">
+                        <span style={{width: `${_.get(entry, "votes.length", 1) * 100 / higherVotes}%`}}/>
                     </div>
-                :null}
-
-            </div>)
+                    {pollActive ?
+                        <div className="entrybtns">
+                            {pollActive &&
+                            <a onClick={this.voteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>👍</a>}&nbsp;
+                            {pollActive && isAdmin && <a onClick={this.deleteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>⛔</a>}
+                        </div>
+                    :null}
+                </div>)
             .value();
 
         const userNames = _.chain(this).get("props.poll.entries").map("votes").flatten().map("username").flatten()
@@ -73,12 +75,20 @@ class Poll extends React.Component {
             },
             {
                 returns: (
-                    <div className="poll">
+                    <div className={"poll " + (pollActive ? "open" : "closed")}>
                         <p><span>{_.get(this, "props.poll.name", "unnamed")}
                             {` (${totalVotes} ${_.gt(totalVotes, 1) || _.eq(totalVotes, 0) ? "votos" : "voto"})`}
                             {pollActive ? "" : " (cerrada)"}</span></p>
                         {usernamesdom}
-                        <div className="entries">{entriesdom}</div>
+                        <div className="entries">{
+                            [entriesdom, pollActive ? null : <div key="entriesrest">
+                                <p className="hiddenEntries"><i>{_.ruleMatch({e: entries}, [
+                                    {"e.length": _.rd(_.partial(_.lte, _, 1), "menor o igual a 1"), returns: null},
+                                    {"e.length": 2, returns: "mas una otra opcion"},
+                                    {returns: `mas ${entries.length - 1} otras opciones`},
+                                ], null, null, {log:true})}</i></p>
+                            </div>]
+                        }</div>
                         <p>
                         <span>
                             {pollActive && <button onClick={this.creatingEntry}>agregar opcion</button>}
