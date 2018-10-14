@@ -13,19 +13,21 @@ class InfoText extends Component {
     }
 
     render() {
-        const infotext = _.chain(this)
-            .get("props.infoTxt", "")
-            .thru(txt => txt.match(/([^*]+|\*[^*]+\*)|\*/g))
-            .map((phrase, i) => {
-                return _.ruleMatch({t: phrase}, [
-                    {
-                        t: /\*[^*]+\*/,
-                        returns: <span key={i}><strong>{
-                            _.get(_.regGroups(phrase, "\\*(?<phrase>[^\*]+)\\*"), "phrase")
-                        }</strong></span>},
+        const infotext = _.chain(this).get("props.infoTxt", "")
+            .split(/\n/).compact()
+            .map(txt => txt.match(/([^*]+|\*[^*]+\*)|\*/g))
+            .map((paragraph, pi) => {
+                return <p>{_.map(paragraph, (phrase, i) => {
+                    return _.ruleMatch({t: phrase}, [
+                        {
+                            t: /\*[^*]+\*/,
+                            returns: <span key={pi + "." +  i}><strong>{
+                                _.get(_.regGroups(phrase, "\\*(?<phrase>[^\*]+)\\*"), "phrase")
+                            }</strong></span>},
 
-                    {returns: <span key={i}>{phrase}</span>}
-                ])
+                        {returns: <span key={pi + "." +  i}>{phrase}</span>}
+                    ])
+                })}</p>
             })
             .value();
 
@@ -39,7 +41,6 @@ class InfoText extends Component {
                     <div className={"infotext"}>
                         <p><textarea defaultValue={_.get(this, "props.infoTxt")} ref="txtInput" onChange={this.updateTempText} rows="5"/></p>
                         <p><span>
-                            <input type="password" ref="claveInput"/>
                             <button onClick={this.confirmEdition}>aceptar</button>
                             <button onClick={this.resetState}>cancelar</button>
                         </span></p>
@@ -51,7 +52,7 @@ class InfoText extends Component {
                 returns: (
                     <div>
                         <img className={"editbtn"} src="/edit.svg" onClick={this.editInfoText} alt={"edit"}/>
-                        <p><span>{infotext}</span></p>
+                        {infotext}
                     </div>
                 )
             },
@@ -59,7 +60,7 @@ class InfoText extends Component {
             {
                 returns: (
                     <div>
-                        <p><span>{infotext}</span></p>
+                        {infotext}
                     </div>
                 )
             }
@@ -80,9 +81,9 @@ class InfoText extends Component {
 
     confirmEdition() {
         let input = _.get(this, "refs.txtInput.value");
-        let pass = _.get(this, "refs.claveInput.value");
+        const userid = _.get(this, "props.userData.id");
 
-        socketEmit("editinfotext", {txt: input, pass: pass});
+        socketEmit("editinfotext", {txt: input, userid});
 
         this.resetState();
     }
