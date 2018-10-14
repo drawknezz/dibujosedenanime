@@ -14,20 +14,23 @@ class InfoText extends Component {
 
     render() {
         const infotext = _.chain(this).get("props.infoTxt", "")
-            .split(/\n/).compact()
+            .split(/\n\s?/)
             .map(txt => txt.match(/([^*]+|\*[^*]+\*)|\*/g))
             .map((paragraph, pi) => {
-                return <p>{_.map(paragraph, (phrase, i) => {
-                    return _.ruleMatch({t: phrase}, [
-                        {
-                            t: /\*[^*]+\*/,
-                            returns: <span key={pi + "." +  i}><strong>{
-                                _.get(_.regGroups(phrase, "\\*(?<phrase>[^\*]+)\\*"), "phrase")
-                            }</strong></span>},
+                return <p key={pi}>{
+                    _.assert(_.map(paragraph, (phrase, i) => {
+                        return _.ruleMatch({t: phrase}, [
+                            {
+                                t: /\*[^*]+\*/,
+                                returns: <span key={pi + "." + i}><strong>{
+                                    _.get(_.regGroups(phrase, "\\*(?<phrase>[^\*]+)\\*"), "phrase")
+                                }</strong></span>
+                            },
 
-                        {returns: <span key={pi + "." +  i}>{phrase}</span>}
-                    ])
-                })}</p>
+                            {returns: <span key={pi + "." + i}>{phrase}</span>}
+                        ])
+                    }), _.isEmpty, " . ", _.identity)
+                }</p>
             })
             .value();
 
@@ -39,7 +42,8 @@ class InfoText extends Component {
                 s: "editando",
                 returns: (
                     <div className={"infotext"}>
-                        <p><textarea defaultValue={_.get(this, "props.infoTxt")} ref="txtInput" onChange={this.updateTempText} rows="5"/></p>
+                        <p><textarea defaultValue={_.get(this, "props.infoTxt")} ref="txtInput"
+                                     onChange={this.updateTempText} rows="5"/></p>
                         <p><span>
                             <button onClick={this.confirmEdition}>aceptar</button>
                             <button onClick={this.resetState}>cancelar</button>
