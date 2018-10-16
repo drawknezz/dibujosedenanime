@@ -1,7 +1,8 @@
 import {
     LOGIN_STATUS_UPDATED,
     PROMOTE_USER,
-    USER_PERMISSIONS_LOADED
+    USER_PERMISSIONS_LOADED,
+    ALL_DATA
 } from "../actions";
 import _ from '../mixins';
 
@@ -40,6 +41,12 @@ export function storiesReducer(state = initialState, action) {
                     ...state.userData,
                     permissions: _.get(action, "payload")
                 }
+            };
+        case ALL_DATA:
+            console.log("ALL DATA action received");
+            return {
+                ...state,
+                data: _.get(action, "payload")
             };
 
         default: return state;

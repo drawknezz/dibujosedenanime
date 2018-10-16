@@ -43,9 +43,10 @@ class Reto extends React.Component {
             },
             {
                 s: "asignando",
-                returns: <p><span>reto actual: <i>asignando...</i>, nombre:
-                  <input type="text" ref="retoNameInput"/>
-                  <button onClick={this.setReto}>asignar</button>
+                returns: <p><span>
+                    nombre: <input type="text" ref="retoNameInput"/>,&nbsp;
+                    a eleccion: <input type="checkbox" ref="tossedCheck"/>&nbsp;
+                    <button onClick={this.setReto}>asignar</button>
                   </span></p>
             },
             {
@@ -75,10 +76,10 @@ class Reto extends React.Component {
 
     setReto() {
         let reto = _.get(this, "refs.retoNameInput.value");
+        let tossed = !_.get(this, "refs.tossedCheck.value", true);
         const userid = _.get(this, "props.userData.id");
 
-
-        socketEmit("createreto", {name: reto, userid});
+        socketEmit("createreto", {name: reto, userid, tossed});
 
         this.resetState();
     }

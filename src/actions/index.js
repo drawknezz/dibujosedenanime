@@ -6,6 +6,7 @@ export const LOGIN_STATUS_UPDATED = 'LOGIN_STATUS_UPDATED';
 export const PROMOTE_USER = 'PROMOTE_USER';
 export const LOAD_USER_PERMISSIONS = 'LOAD_USER_PERMISSIONS';
 export const USER_PERMISSIONS_LOADED = 'USER_PERMISSIONS_LOADED';
+export const ALL_DATA = "ALL_DATA";
 
 export function login() {
     return {
@@ -49,6 +50,13 @@ export function userPermissionsLoaded(payload) {
 export function promoteUser() {
     return {
         type: PROMOTE_USER
+    }
+}
+
+export function allData(data) {
+    return {
+        type: ALL_DATA,
+        payload: data
     }
 }
 

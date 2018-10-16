@@ -109,7 +109,7 @@ const createMember = function (name, retoId) {
                     }, (err, docs) => {
                         if (err) rej(`no se pudo crear miembro ${name}, error: ${err}`);
 
-                        res(`miembro ${name} creado`);
+                        res(docs);
                     })
                 } else {
                     rej(`ya existe un miembro con nombre ${name}`);
@@ -218,7 +218,7 @@ const createChar = function (name, serie, retoId) {
                     }, (err, docs) => {
                         if (err) rej("No se pudo crear el personaje " + name + ": " + err);
 
-                        res("personaje " + name + " creado c:");
+                        res(docs);
                     })
                 } else {
                     rej(`el personaje ${name} ya existe`)
@@ -228,18 +228,19 @@ const createChar = function (name, serie, retoId) {
     });
 };
 
-const createReto = function (name) {
+const createReto = function (name, tossed) {
     return new Promise((res, rej) => {
         debugger;
         getDB().then(db => {
             db.insertOne({
                 type: "reto",
-                name: name,
-                fecha: new Date()
+                name,
+                fecha: new Date(),
+                tossed: Boolean(tossed)
             }, (err, docs) => {
                 if (err) rej(err);
 
-                res(`reto ${name} creado uwu`);
+                res(`reto ${tossed ? "" : "a eleccion"} ${name} creado uwu`);
             });
         })
     })

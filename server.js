@@ -34,7 +34,7 @@ const handleError = error => console.log("unhandled promise error: ", error);
 process.removeListener("unhandledRejection", handleError);
 process.on("unhandledRejection", handleError);
 
-app.get("/", function (request, response) {
+app.get("/", function(request, response) {
     response.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
@@ -47,7 +47,7 @@ app.get("/getUserPermission", function(request, response) {
     })
 });
 
-const validatePass = function (pass) {
+const validatePass = function(pass) {
     let validPass = process.env.PASS || "12345";
 
     return new Promise((res, rej) => {
@@ -56,7 +56,7 @@ const validatePass = function (pass) {
     })
 };
 
-const _sortear = function (membersIds, chars) {
+const _sortear = function(membersIds, chars) {
     let shuffled = _.chain(membersIds).shuffle().map(m => ({member: m})).value();
 
     let sorted = _.chain(chars)
@@ -77,7 +77,7 @@ const _sortear = function (membersIds, chars) {
     return _.chain(membersIds).map(m => _.find(sorted, {member: m})).compact().value()
 };
 
-const deleteSorteoEntryByChar = function (charId) {
+const deleteSorteoEntryByChar = function(charId) {
     return db.getCharById(charId).then(char => {
         return Promise.props({
             sorteo: db.getSorteoForReto(_.get(char, "reto"))
@@ -89,7 +89,7 @@ const deleteSorteoEntryByChar = function (charId) {
     });
 };
 
-const deleteSorteoEntryByMember = function (memberId) {
+const deleteSorteoEntryByMember = function(memberId) {
     return db.getMemberById(memberId).then(member => {
         return Promise.props({
             sorteo: db.getSorteoForReto(_.get(member, "reto"))
@@ -101,7 +101,7 @@ const deleteSorteoEntryByMember = function (memberId) {
     });
 };
 
-const deleteUnexistingMembersFromSorteo = function () {
+const deleteUnexistingMembersFromSorteo = function() {
     return db.getLastReto().then(reto => {
         return Promise.props({
             sorteo: db.getSorteoForReto(_.get(reto, "_id")),
@@ -115,7 +115,7 @@ const deleteUnexistingMembersFromSorteo = function () {
     });
 };
 
-const deleteUnexistingCharsFromSorteo = function () {
+const deleteUnexistingCharsFromSorteo = function() {
     return db.getLastReto().then(reto => {
         return Promise.props({
             sorteo: db.getSorteoForReto(_.get(reto, "_id")),
@@ -129,7 +129,7 @@ const deleteUnexistingCharsFromSorteo = function () {
     });
 };
 
-const sortear = function (userid) {
+const sortear = function(userid) {
     return testForPermissions(userid, "sort").then(() => {
         console.log("sorteando...");
 
@@ -151,11 +151,11 @@ const sortear = function (userid) {
     });
 };
 
-const deleteChar = function (id, userid) {
+const deleteChar = function(id, userid) {
     return testForPermissions(userid, "deletechar").then(() => {
         return db.getCharById(id).then(char => {
             console.log(`deleting char ${_.get(char, "name")} (${id})`);
-            return db.deleteChar(id).then(function () {
+            return db.deleteChar(id).then(function() {
                 return Promise.all([deleteUnexistingMembersFromSorteo(), deleteUnexistingCharsFromSorteo()])
                     .then(() => `personaje ${_.get(char, "name")} eliminado`);
             });
@@ -163,7 +163,7 @@ const deleteChar = function (id, userid) {
     });
 };
 
-const createChar = function (name, serie, userid) {
+const createChar = function(name, serie, userid) {
     return testForPermissions(userid, "createchar").then(() => {
         console.log("creating char ", name);
 
@@ -173,7 +173,7 @@ const createChar = function (name, serie, userid) {
     });
 };
 
-const createManyChars = function (chars, userid) {
+const createManyChars = function(chars, userid) {
     return testForPermissions(userid, "createchar").then(() => {
 
         return db.getLastReto().then(reto => {
@@ -186,7 +186,7 @@ const createManyChars = function (chars, userid) {
     });
 };
 
-const createMember = function (name) {
+const createMember = function(name) {
     return db.getLastReto().then(reto => {
         console.log("creating member " + name);
         return db.createMember(name, _.get(reto, "_id")).then(() => {
@@ -195,7 +195,21 @@ const createMember = function (name) {
     });
 };
 
-const deleteMember = function (memberId, userid) {
+const createMemberWithChar = function(name, char, series) {
+    return db.getLastReto().then(reto => {
+        console.log(`creating member ${name} with char ${char}:${series}`);
+        return Promise.props({
+            member: db.createMember(name, _.get(reto, "_id")),
+            char: db.createChar(char, series, _.get(reto, "_id"))
+        }).then((data) => {
+            return assignSpecificCharToMember(_.get(data, "member.insertedId"), _.get(data, "char.insertedId"), null, true).then(() => {
+                return `miembro ${name} creado con exito c;`
+            });
+        });
+    });
+};
+
+const deleteMember = function(memberId, userid) {
     return testForPermissions(userid, "deletemember").then(() => {
         deleteUnexistingMembersFromSorteo();
         deleteUnexistingCharsFromSorteo();
@@ -209,7 +223,7 @@ const deleteMember = function (memberId, userid) {
     });
 };
 
-const unassignMember = function (memberId, userid) {
+const unassignMember = function(memberId, userid) {
     return testForPermissions(userid, "unassingmember").then(() => {
         return db.getMemberById(memberId).then(member => {
             console.log(`unasigning member ${_.get(member, "name")} (${memberId})`);
@@ -220,7 +234,7 @@ const unassignMember = function (memberId, userid) {
     });
 };
 
-const unassignChar = function (charId, userid) {
+const unassignChar = function(charId, userid) {
     return testForPermissions(userid, "unassignchar").then(() => {
         return db.getCharById(charId).then(char => {
             console.log(`unasigning char ${_.get(char, "name")} (${charId})`);
@@ -234,8 +248,8 @@ const unassignChar = function (charId, userid) {
 /**
  para asignar un char libre a un miembro
  */
-const assignCharToMember = function (id, userid) {
-    return testForPermissions(userid, "assignchartomember").then(() => {
+const assignCharToMember = function(memberid, userid, ignorepermissions = false) {
+    return testForPermissions(userid, "assignchartomember", ignorepermissions).then(() => {
         return deleteUnexistingMembersFromSorteo()
             .then(() => deleteUnexistingCharsFromSorteo())
             .then(() => {
@@ -243,9 +257,9 @@ const assignCharToMember = function (id, userid) {
                     return Promise.props({
                         sorteo: db.getSorteoForReto(_.get(reto, "_id")),
                         chars: db.getAllCharsForReto(_.get(reto, "_id")),
-                        member: db.getMemberById(id)
+                        member: db.getMemberById(memberid)
                     }).then(props => {
-                        console.log(`assigning char to member ${_.get(props, "member.name")} (${id})`);
+                        console.log(`assigning char to member ${_.get(props, "member.name")} (${memberid})`);
 
                         let assignedCharsIds = _.chain(props).get("sorteo.values").map("char").map(_.toString).value();
                         let unassignedChars = _.chain(props.chars).reject(c => _.includes(assignedCharsIds, _.toString(_.get(c, "_id")))).value();
@@ -272,8 +286,8 @@ const assignCharToMember = function (id, userid) {
 /**
  para asignar un miembro libre a un char
  */
-const assignMemberToChar = function (charId, userid) {
-    return testForPermissions(userid, "assignmembertochar").then(() => {
+const assignMemberToChar = function(charId, userid, ignorepermissions = false) {
+    return testForPermissions(userid, "assignmembertochar", ignorepermissions).then(() => {
         return db.getLastReto().then(reto => {
             return Promise.props({
                 sorteo: db.getSorteoForReto(_.get(reto, "_id")),
@@ -302,14 +316,47 @@ const assignMemberToChar = function (charId, userid) {
     });
 };
 
-const createReto = function (name, userid) {
-    return testForPermissions(userid, "createreto").then(() => {
-        console.log(`creating reto ${name}`);
-        return db.createReto(name)
+const assignSpecificCharToMember = function(memberId, charId, userid, ignorepermissions = false) {
+    return testForPermissions(userid, "assignmembertochar", ignorepermissions).then(() => {
+        return db.getLastReto().then(reto => {
+            return Promise.props({
+                sorteo: db.getSorteoForReto(_.get(reto, "_id")),
+                members: db.getAllMembersForReto(_.get(reto, "_id")),
+                member: db.getMemberById(memberId),
+                char: db.getCharById(charId)
+            }).then(props => {
+                console.log(`asigning char ${_.get(props, "char.name")} (${charId}) to member ${_.get(props, "member.name")}`);
+
+                let assignedMembersIds = _.chain(props).get("sorteo.values").map("member").map(_.toString).value();
+
+                if (!_.includes(assignedMembersIds, memberId)) {
+                    let assignment = {
+                        char: charId,
+                        charName: _.get(props, "char.name"),
+                        member: memberId
+                    };
+                    let newSorteo = _.union([assignment], _.get(props, "sorteo.values"));
+                    return db.setSorteoForReto(_.toString(_.get(reto, "_id")), newSorteo).then(() => {
+                        console.log(`${_.get(props, "char.name")} asociado a miembro ${_.get(props, "member.name")}`);
+                        return `${_.get(props, "char.name")} asociado a miembro ${_.get(props, "member.name")}`;
+                    });
+                } else {
+                    console.log(`el miembro ${_.get(props, "member.name")} no esta disponible`);
+                    return `el miembro ${_.get(props, "member.name")} no esta disponible`;
+                }
+            });
+        });
     });
 };
 
-const deleteLastReto = function (userid) {
+const createReto = function(name, userid, tossed) {
+    return testForPermissions(userid, "createreto").then(() => {
+        console.log(`creating reto ${name}`);
+        return db.createReto(name, tossed)
+    });
+};
+
+const deleteLastReto = function(userid) {
     return testForPermissions(userid, "deletereto").then(() => {
         return db.getLastReto().then(reto => {
             console.log(`eliminando reto ${_.get(reto, "name")}`);
@@ -318,25 +365,25 @@ const deleteLastReto = function (userid) {
     });
 };
 
-const updateInfoText = function (txt, userid) {
+const updateInfoText = function(txt, userid) {
     return testForPermissions(userid, "updateinfo").then(() => {
         return db.setInfoTxt(txt);
     });
 };
 
-const createUser = function (name, fid) {
+const createUser = function(name, fid) {
     return db.createUser(name, fid);
 };
 
-const promoteMember = function (memberid, pass) {
+const promoteMember = function(memberid, pass) {
     return validatePass(pass).then(() => {
         return db.assignPermissionsToUser(memberid, ["any"]);
     });
 };
 
-const testForPermissions = function (userId, permissions) {
+const testForPermissions = function(userId, permissions, ignorepermissions = false) {
     return new Promise((res, rej) => {
-        return db.getUserById(userId).then(user => {
+        return ignorepermissions ? res("permisos ignorados") : db.getUserById(userId).then(user => {
             let userpermissions = _.get(user, "permissions");
 
             if (_.includes(userpermissions, "any") || _.chain(permissions).ensureArray().difference(userpermissions).isEmpty().value()) {
@@ -348,7 +395,7 @@ const testForPermissions = function (userId, permissions) {
     })
 };
 
-const createPoll = function (name, userId) {
+const createPoll = function(name, userId) {
     return new Promise((res, rej) => {
         return testForPermissions(userId, "createpoll").then(() => {
             return db.createPoll(name).then(() => {
@@ -358,7 +405,7 @@ const createPoll = function (name, userId) {
     });
 };
 
-const deletePoll = function (pollId, userId) {
+const deletePoll = function(pollId, userId) {
     return new Promise((res, rej) => {
         return testForPermissions(userId, "deletepoll").then(() => {
             return db.deletePoll(pollId).then(() => {
@@ -368,7 +415,7 @@ const deletePoll = function (pollId, userId) {
     });
 };
 
-const createPollEntry = function (name, pollid, userId) {
+const createPollEntry = function(name, pollid, userId) {
     return new Promise((res, rej) => {
         return db.createPollEntry(name, pollid).then(() => {
             res("opcion creada con exito")
@@ -376,11 +423,11 @@ const createPollEntry = function (name, pollid, userId) {
     });
 };
 
-const votePollEntry = function (entryid, pollid, userid) {
+const votePollEntry = function(entryid, pollid, userid) {
     return db.voteEntryPoll(entryid, pollid, userid);
 };
 
-const deletePollEntry = function (entryid, pollid, userid) {
+const deletePollEntry = function(entryid, pollid, userid) {
     return testForPermissions(userid, "deleteentry").then(() => {
         return db.deletePollEntry(entryid, pollid, userid);
     });
@@ -398,7 +445,7 @@ const closePoll = function(pollid, userid) {
     });
 };
 
-const getAllData = function () {
+const getAllData = function() {
     return db.getLastReto().then(reto => {
         return Promise.props({
             infoTxt: db.getInfoTxt(),
@@ -432,7 +479,7 @@ const getAllData = function () {
 
 let connectedUsers = [];
 
-io.on("connection", function (socket) {
+io.on("connection", function(socket) {
     const updateAllClients = () => {
         getAllData().then(data => {
             io.emit("allData", data)
@@ -442,7 +489,7 @@ io.on("connection", function (socket) {
     connectedUsers = [...connectedUsers, {clientid: _.get(socket, "client.id"), name: ""}];
     io.emit("usercount", connectedUsers);
 
-    socket.on('disconnect', function () {
+    socket.on('disconnect', function() {
         connectedUsers = _.reject(c => c.clientid === _.get(socket, "client.id"));
 
         io.emit("usercount", connectedUsers);
@@ -468,7 +515,7 @@ io.on("connection", function (socket) {
         });
     });
 
-    socket.on("allData", function () {
+    socket.on("allData", function() {
         updateAllClients();
     });
 
@@ -479,6 +526,7 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         })
     });
 
@@ -489,6 +537,7 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         })
     });
 
@@ -499,6 +548,7 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         })
     });
 
@@ -509,6 +559,18 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
+        })
+    });
+
+    socket.on("creatememberwithchar", ({name, char, series}) => {
+        createMemberWithChar(name, char, series).then(resp => {
+            updateAllClients();
+            socket.emit("msg", resp);
+        }).catch(err => {
+            console.log("ERROR: ", err);
+            socket.emit("err", err);
+            updateAllClients();
         })
     });
 
@@ -519,6 +581,7 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         })
     });
 
@@ -529,6 +592,7 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         })
     });
 
@@ -539,6 +603,7 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         })
     });
 
@@ -549,6 +614,7 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         })
     });
 
@@ -559,16 +625,18 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         })
     });
 
-    socket.on("createreto", ({name, userid}) => {
-        createReto(name, userid).then(resp => {
+    socket.on("createreto", ({name, userid, tossed}) => {
+        createReto(name, userid, tossed).then(resp => {
             updateAllClients();
             socket.emit("msg", resp);
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         })
     });
 
@@ -580,6 +648,7 @@ io.on("connection", function (socket) {
             console.log("ERROR: ", err);
             console.log("[ERROR] ->", err);
             socket.emit("err", err);
+            updateAllClients();
         })
     });
 
@@ -590,6 +659,7 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         })
     });
 
@@ -600,6 +670,7 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         });
     });
 
@@ -610,6 +681,7 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         });
     });
 
@@ -620,6 +692,7 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         });
     });
 
@@ -630,6 +703,7 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         });
     });
 
@@ -640,6 +714,7 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         });
     });
 
@@ -650,6 +725,7 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         });
     });
 
@@ -660,6 +736,7 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         });
     });
 
@@ -670,6 +747,7 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         });
     });
 
@@ -680,11 +758,12 @@ io.on("connection", function (socket) {
         }).catch(err => {
             console.log("ERROR: ", err);
             socket.emit("err", err);
+            updateAllClients();
         });
     });
 });
 
 // listen for requests :)
-let listener = http.listen(process.env.PORT || 3000, function () {
+let listener = http.listen(process.env.PORT || 3000, function() {
     console.log('Your app is listening on port ' + listener.address().port);
 });

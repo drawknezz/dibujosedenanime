@@ -4,6 +4,7 @@ import _ from './mixins';
 import {socketEmit} from './api';
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 import ReactCSSReplace from 'react-css-transition-replace';
+import {connect} from "react-redux";
 
 class Members extends Component {
     constructor() {
@@ -21,6 +22,7 @@ class Members extends Component {
         let self = this;
         let members = this.props.members;
         let hasMembers = !_.isEmpty(members);
+        let tossedReto = _.get(this, "props.data.reto.tossed");
 
         return _.ruleMatch({
             s: this.state.status
@@ -45,7 +47,7 @@ class Members extends Component {
                             transitionName="controles"
                             transitionEnterTimeout={300}
                             transitionLeaveTimeout={300}
-                        >
+                        >{tossedReto ?
                             <div key={"agregandocontrols"}>
                                 <label>nombre: <input ref="memberNameTxt" onChange={this.checkInput}
                                                       defaultValue={_.get(this, "props.loginData.username")}/></label>
@@ -54,6 +56,19 @@ class Members extends Component {
                                 </button>
                                 <button onClick={this.resetStatus}>cancelar</button>
                             </div>
+                            :
+                            <div key={"agregandocontrols"}>
+                                <label>nombre: <input ref="memberNameTxt" onChange={this.checkInput}
+                                                      defaultValue={_.get(this, "props.loginData.username")}/></label>
+                                <label>personaje: <input ref="charNameTxt" onChange={this.checkInput}/></label>
+                                <label>serie: <input ref="seriesNameTxt" onChange={this.checkInput}/></label>
+
+                                <button onClick={this.sendNewMember}
+                                        disabled={_.get(this, "state.invalidInput")}>agregar
+                                </button>
+                                <button onClick={this.resetStatus}>cancelar</button>
+                            </div>
+                        }
                         </ReactCSSReplace>
 
                         <p>
@@ -146,7 +161,10 @@ class Members extends Component {
 
     checkInput() {
         let name = _.get(this, "refs.memberNameTxt.value");
-        this.setState({invalidInput: /[-?()^+]/.test(name)})
+        let char = _.get(this, "refs.charNameTxt.value");
+        let series = _.get(this, "refs.seriesNameTxt.value");
+
+        this.setState({invalidInput: /[-?()^+]/.test(name) && /[-?()^+]/.test(char) && /[-?()^+]/.test(series)})
     }
 
     createMember() {
@@ -159,8 +177,14 @@ class Members extends Component {
 
     sendNewMember() {
         let name = _.get(this, "refs.memberNameTxt.value");
+        let char = _.get(this, "refs.charNameTxt.value");
+        let series = _.get(this, "refs.seriesNameTxt.value");
 
-        socketEmit("createmember", {name: name});
+        if(char) {
+            socketEmit("creatememberwithchar", {name, char, series});
+        } else {
+            socketEmit("createmember", {name});
+        }
 
         this.resetStatus();
     }
@@ -176,4 +200,4 @@ class Members extends Component {
     }
 }
 
-export default Members;
+export default connect(state => state)(Members);

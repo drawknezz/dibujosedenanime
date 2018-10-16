@@ -8,6 +8,8 @@ import InfoText from './InfoText'
 import Login from './Login';
 import {onSocket, socketEmit} from "./api";
 import Polls from "./Polls";
+import {connect} from "react-redux";
+import {allData} from "./actions/index"
 
 class App extends Component {
     constructor() {
@@ -134,6 +136,8 @@ class App extends Component {
     }
 
     componentDidMount() {
+        let self = this;
+
         onSocket("usercount", a => {
             this.setState({usercount: a})
         });
@@ -141,6 +145,8 @@ class App extends Component {
         onSocket("allData", data => {
             this.setState({status: "loaded"});
 
+            debugger;
+            _.attemptBound(self, "props.allData", data);
             this.updateAll(data);
         });
 
@@ -170,4 +176,6 @@ class App extends Component {
     }
 }
 
-export default App;
+export default connect(state => state, dispatch => ({
+    allData: data => dispatch(allData(data))
+}))(App);

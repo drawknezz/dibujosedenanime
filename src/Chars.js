@@ -53,7 +53,7 @@ class Chars extends Component {
                             transitionLeaveTimeout={200}
                         >{
                             _.chain(chars)
-                                .sortBy(m => m.name.toLowerCase())
+                                .sortBy(m => _.toLower(_.get(m, "name", "")))
                                 .map(char => {
                                     return (<Char key={char._id} name={char.name} serie={char.serie} id={char._id}
                                                   dis={true} member={char.assignedTo}/>)
@@ -102,7 +102,7 @@ class Chars extends Component {
                             transitionLeaveTimeout={200}
                         >{
                             _.chain(chars)
-                                .sortBy(m => m.name.toLowerCase())
+                                .sortBy(m => _.toLower(_.get(m, "name", "")))
                                 .map(char => {
                                     return (<Char key={char._id} name={char.name} serie={char.serie} id={char._id}
                                                   dis={true} member={char.assignedTo}/>)
@@ -132,7 +132,7 @@ class Chars extends Component {
                                 _.isEmpty(chars) ?
                                     <p><span>No hay personajes asociados al reto actual...</span></p> :
                                     _.chain(chars)
-                                        .sortBy(m => m.name.toLowerCase())
+                                        .sortBy(m => _.toLower(_.get(m, "name", "")))
                                         .map(char => {
                                             return (
                                                 <Char key={char._id} name={char.name} serie={char.serie} id={char._id}
