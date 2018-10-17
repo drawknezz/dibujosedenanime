@@ -251,6 +251,12 @@ footer {
     text-align: center;
 }
 
+.controles .fields {
+    display: flex;
+    margin-bottom: 10px;
+    justify-content: space-evenly;
+}
+
 .controles-enter {
     opacity: 0.01;
 }
@@ -386,10 +392,40 @@ input[type="password"] {
     .charsList {
         grid-template-columns: auto auto;
     }
+
+    .controles  {
+        margin: 10px 0 10px;
+    }
+
+    .controles label {
+        display: grid;
+        grid-template-columns: 100px auto;
+        text-align: left;
+        margin-bottom: 5px;
+    }
+
+    .controles .fields {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        margin-bottom: 10px;
+    }
+
+    .controles label input {
+        max-width: initial;
+        flex: 1 1;
+    }
 }
 
 @media (max-width: 600px) {
     .charsList {
         grid-template-columns: auto;
+    }
+
+    .controles label {
+        display: grid;
+        grid-template-columns: auto;
+        text-align: left;
+        margin-bottom: 5px;
     }
 }

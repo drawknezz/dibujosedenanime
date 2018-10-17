@@ -145,7 +145,6 @@ class App extends Component {
         onSocket("allData", data => {
             this.setState({status: "loaded"});
 
-            debugger;
             _.attemptBound(self, "props.allData", data);
             this.updateAll(data);
         });

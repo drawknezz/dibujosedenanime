@@ -43,30 +43,37 @@ class Members extends Component {
                     <div className="members">
                         <ReactCSSReplace
                             component="div"
-                            className="controles"
+                            className="controlesbox"
                             transitionName="controles"
                             transitionEnterTimeout={300}
                             transitionLeaveTimeout={300}
                         >{tossedReto ?
-                            <div key={"agregandocontrols"}>
-                                <label>nombre: <input ref="memberNameTxt" onChange={this.checkInput}
-                                                      defaultValue={_.get(this, "props.loginData.username")}/></label>
-                                <button onClick={this.sendNewMember}
-                                        disabled={_.get(this, "state.invalidInput")}>agregar
-                                </button>
-                                <button onClick={this.resetStatus}>cancelar</button>
+                            <div key={"agregandocontrols"} className="memberscontrols controles">
+                                <div className="fields">
+                                    <label>nombre: <input ref="memberNameTxt" onChange={this.checkInput}
+                                                          defaultValue={_.get(this, "props.loginData.username")}/></label>
+                                </div>
+                                <div className="buttons">
+                                    <button onClick={this.sendNewMember}
+                                            disabled={_.get(this, "state.invalidInput")}>agregar
+                                    </button>
+                                    <button onClick={this.resetStatus}>cancelar</button>
+                                </div>
                             </div>
                             :
-                            <div key={"agregandocontrols"}>
-                                <label>nombre: <input ref="memberNameTxt" onChange={this.checkInput}
-                                                      defaultValue={_.get(this, "props.loginData.username")}/></label>
-                                <label>personaje: <input ref="charNameTxt" onChange={this.checkInput}/></label>
-                                <label>serie: <input ref="seriesNameTxt" onChange={this.checkInput}/></label>
-
-                                <button onClick={this.sendNewMember}
-                                        disabled={_.get(this, "state.invalidInput")}>agregar
-                                </button>
-                                <button onClick={this.resetStatus}>cancelar</button>
+                            <div key={"agregandocontrols"} className="memberscontrols controles">
+                                <div className="fields">
+                                    <label>nombre: <input ref="memberNameTxt" onChange={this.checkInput}
+                                                          defaultValue={_.get(this, "props.loginData.username")}/></label>
+                                    <label>personaje: <input ref="charNameTxt" onChange={this.checkInput}/></label>
+                                    <label>serie: <input ref="seriesNameTxt" onChange={this.checkInput}/></label>
+                                </div>
+                                <div className="buttons">
+                                    <button onClick={this.sendNewMember}
+                                            disabled={_.get(this, "state.invalidInput")}>agregar
+                                    </button>
+                                    <button onClick={this.resetStatus}>cancelar</button>
+                                </div>
                             </div>
                         }
                         </ReactCSSReplace>
