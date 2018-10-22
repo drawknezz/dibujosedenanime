@@ -61,7 +61,6 @@
     border-radius: 3px;
     padding: 5px;
     margin-right: 5px;
-    -webkit-box-shadow: inset -1px 1px 1px rgba(141, 23, 23, 0.3);
     box-shadow: 0 1px 3px rgba(39, 39, 39, 0.46);
     display: -ms-flexbox;
     display: flex;
