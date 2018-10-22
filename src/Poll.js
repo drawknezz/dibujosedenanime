@@ -21,7 +21,6 @@ class Poll extends React.Component {
         const higherVotes = _.chain(entries).map("votes.length").sortBy(a => a).last().dflt(1).value();
         const totalVotes = _.chain(entries).map("votes.length").reduce((a, b) => a + b).dflt(0).value();
         const isAdmin = _.includes(_.get(this, "props.userData.permissions"), "any");
-
         const pollActive = _.get(this, "props.poll.status") !== "closed";
         const entriesdom = _.chain(entries)
             .assert(pollActive, _.identity, _.first)
