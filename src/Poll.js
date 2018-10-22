@@ -28,14 +28,12 @@ class Poll extends React.Component {
             .ensureArray()
             .map(entry =>
                 <div className="entry" key={_.get(entry, "_id")}>
-                    <span className="entryname"><strong>{_.get(entry, "name")}</strong></span>
-                    <div className="meter">
-                        <span style={{width: `${_.get(entry, "votes.length", 1) * 100 / higherVotes}%`}}/>
+                    <div className="meter" onClick={pollActive ? this.voteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id")) : null}>
+                        <span className="entryname"><strong>{_.get(entry, "name")}</strong></span>
+                        <span className="pollentrybar" style={{width: `${_.get(entry, "votes.length", 1) * 100 / higherVotes}%`}}/>
                     </div>
                     {pollActive ?
                         <div className="entrybtns">
-                            {pollActive &&
-                            <a onClick={this.voteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>👍</a>}&nbsp;
                             {pollActive && isAdmin && <a onClick={this.deleteEntry(_.get(entry, "_id"), _.get(this, "props.poll._id"))}>⛔</a>}
                         </div>
                     :null}
@@ -106,7 +104,6 @@ class Poll extends React.Component {
     }
 
     creatingEntry() {
-        console.log("creating entry :0");
         this.setState({status: "addingentry"});
     }
 
@@ -120,6 +117,7 @@ class Poll extends React.Component {
         const pollid = _.get(this, "props.poll._id");
         const name = _.get(this, "refs.nametxt.value");
 
+        console.log("createpollentry::socketemit");
         socketEmit("createpollentry", {name: name, pollid: pollid, userid: userid});
 
         this.resetState();

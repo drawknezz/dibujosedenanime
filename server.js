@@ -417,7 +417,7 @@ const deletePoll = function(pollId, userId) {
 
 const createPollEntry = function(name, pollid, userId) {
     return new Promise((res, rej) => {
-        return db.createPollEntry(name, pollid).then(() => {
+        return db.createPollEntry(name, pollid, userId).then(() => {
             res("opcion creada con exito")
         })
     });

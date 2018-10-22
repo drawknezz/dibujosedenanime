@@ -423,20 +423,23 @@ const createPoll = function (name) {
     })
 };
 
-const createPollEntry = function (name, pollid) {
+const createPollEntry = function (name, pollid, userid) {
     return new Promise((res, rej) => {
         getDB().then(db => {
-            getPollById(pollid).then(poll => {
+            Promise.props({
+                user: getUserById(userid),
+                poll: getPollById(pollid)
+            }).then(({user, poll}) => {
                 if (poll) {
                     db.insertOne({type: "pollentry", poll: mongodb.ObjectID(pollid), name: name}, (err, docs) => {
                         if (err) rej(err);
-
-                        res(`opcion ${name} creada...`);
+                        console.log(`opcion ${name} creada por ${_.get(user, "name", "usuario anonimo")}...`);
+                        res(`opcion ${name} creada por ${_.get(user, "name", "usuario anonimo")}...`);
                     })
                 } else {
                     rej("votacion inexistente :0")
                 }
-            });
+            } );
         })
     });
 };
