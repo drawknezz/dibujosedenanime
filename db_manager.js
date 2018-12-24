@@ -319,6 +319,17 @@ const getLastReto = function () {
     })
 };
 
+const getPageTitle = function() {
+    return new Promise((res, rej) => {
+        getDB().then(db => {
+            db.findOne({type: "pagetitle"}, (err, docs) => {
+                if (err) rej(err);
+                res(docs);
+            })
+        });
+    })
+}
+
 const getInfoTxt = function () {
     return new Promise((res, rej) => {
         getDB().then(db => {
@@ -345,6 +356,28 @@ const setInfoTxt = function (txt) {
                         if (err) rej(err);
 
                         res("mensaje actualizado");
+                    })
+                }
+            });
+        })
+    })
+};
+
+const setPageTitle = function (txt) {
+    return new Promise((res, rej) => {
+        getDB().then(db => {
+            db.find({type: "pagetitle"}).toArray((err, docs) => {
+                if (_.isEmpty(docs)) {
+                    db.insertOne({type: "pagetitle", txt: txt}, (err, docs) => {
+                        if (err) rej(err);
+
+                        res("titulo actualizado");
+                    })
+                } else {
+                    db.updateOne({type: "pagetitle"}, {$set: {txt: txt}}, (err, docs) => {
+                        if (err) rej(err);
+
+                        res("titulo actualizado");
                     })
                 }
             });
@@ -767,6 +800,8 @@ module.exports = {
     deleteReto,
     getLastReto,
     getInfoTxt,
+    getPageTitle,
+    setPageTitle,
     setInfoTxt,
     createUser,
     assignPermissionsToUser,

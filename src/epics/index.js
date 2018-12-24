@@ -77,7 +77,7 @@ function checkUserPermissionsEpic(actions$) {
     return actions$.pipe(
         ofType(LOGIN_STATUS_UPDATED),
         switchMap(action => {
-            const url = `${/localhost/.test(window.location.href) ? "http://localhost:3000" : ""}/getUserPermission?userid=${_.get(action, "payload.userInfo.data.id")}`;
+            const url = `${/localhost/.test(window.location.href) ? "http://localhost:3001" : ""}/getUserPermission?userid=${_.get(action, "payload.userInfo.data.id")}`;
             return Observable.from(axios(url))
         }),
         map(action => userPermissionsLoaded(_.get(action, "data")))

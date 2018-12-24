@@ -371,6 +371,12 @@ const updateInfoText = function(txt, userid) {
     });
 };
 
+const updatePageTitle = function(txt, userid) {
+    return testForPermissions(userid, "updatetitle").then(() => {
+        return db.setPageTitle(txt);
+    });
+};
+
 const createUser = function(name, fid) {
     return db.createUser(name, fid);
 };
@@ -448,6 +454,7 @@ const closePoll = function(pollid, userid) {
 const getAllData = function() {
     return db.getLastReto().then(reto => {
         return Promise.props({
+            pageTitle: db.getPageTitle(),
             infoTxt: db.getInfoTxt(),
             reto: reto,
             sorteo: db.getSorteoForReto(_.get(reto, "_id")),
@@ -490,7 +497,7 @@ io.on("connection", function(socket) {
     io.emit("usercount", connectedUsers);
 
     socket.on('disconnect', function() {
-        connectedUsers = _.reject(c => c.clientid === _.get(socket, "client.id"));
+        connectedUsers = _.reject(connectedUsers, c => c.clientid === _.get(socket, "client.id"));
 
         io.emit("usercount", connectedUsers);
     });
@@ -521,6 +528,17 @@ io.on("connection", function(socket) {
 
     socket.on("editinfotext", ({txt, userid}) => {
         updateInfoText(txt, userid).then(resp => {
+            updateAllClients();
+            socket.emit("msg", resp);
+        }).catch(err => {
+            console.log("ERROR: ", err);
+            socket.emit("err", err);
+            updateAllClients();
+        })
+    });
+
+    socket.on("editpagetitle", ({txt, userid}) => {
+        updatePageTitle(txt, userid).then(resp => {
             updateAllClients();
             socket.emit("msg", resp);
         }).catch(err => {
@@ -764,6 +782,6 @@ io.on("connection", function(socket) {
 });
 
 // listen for requests :)
-let listener = http.listen(process.env.PORT || 3000, function() {
+let listener = http.listen(process.env.PORT || 3001, function() {
     console.log('Your app is listening on port ' + listener.address().port);
 });

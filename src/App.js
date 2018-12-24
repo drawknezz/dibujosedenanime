@@ -10,6 +10,7 @@ import {onSocket, socketEmit} from "./api";
 import Polls from "./Polls";
 import {connect} from "react-redux";
 import {allData} from "./actions/index"
+import PageTitle from "./PageTitle";
 
 class App extends Component {
     constructor() {
@@ -44,9 +45,7 @@ class App extends Component {
                         <Login onStatusChange={this.onLoginStatusChange} loginData={_.get(this, "state.loginData")} userData={_.get(this, "state.userData")}/>
 
                         <header>
-                            <h1 data-testid="pagetitle">
-                                Dibujos eden anime <span role="img" aria-label="hearts">💕</span>
-                            </h1>
+                            <PageTitle txt={_.get(this, "state.pageTitle")}/>
                         </header>
 
                         {_.get(this, "state.messages") ? <div className="messages">
@@ -108,6 +107,7 @@ class App extends Component {
     updateAll(data) {
         console.log("allData response: ", data);
         this.setState({
+            pageTitle: _.get(data, "pageTitle.txt"),
             infoTxt: _.get(data, "infoTxt"),
             reto: _.get(data, "reto"),
             sorteo: _.get(data, "sorteo"),
