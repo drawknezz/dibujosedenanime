@@ -134,7 +134,11 @@ h1 {
     font-weight: bold;
     font-family: 'Indie Flower', cursive;
     text-shadow: 5px 3px 3px #6f151485;
-    white-space: pre;
+    white-space: pre-line;
+}
+
+h1 span {
+    display: inline-block;
 }
 
 .pagetitleInput {
@@ -142,7 +146,7 @@ h1 {
     font-family: 'Indie Flower', cursive;
     text-shadow: 5px 3px 3px #6f151485;
     font-size: 1em;
-    min-width: 50vw;
+    min-width: 100vw;
     background: rgba(0, 0, 0, 0);
     border: none;
     box-shadow: none;

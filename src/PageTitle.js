@@ -12,8 +12,14 @@ class PageTitle extends Component {
         _.bindAll(this, "editPageTitle", "confirmEdition", "updateTempText", "resetState");
     }
 
+    updateBrowserTitle(txt) {
+        window.document.title = txt
+    }
+
     render() {
         const txt = _.defaultTo(_.get(this, "state.txt"), _.get(this, "props.txt", ""));
+
+        this.updateBrowserTitle(txt)
 
         return _.ruleMatch({
             s: _.get(this, "state.status"),
